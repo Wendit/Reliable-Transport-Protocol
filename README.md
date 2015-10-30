@@ -1,5 +1,5 @@
 # CS3251 PJ2
-Reliable transportation protocol over UDP
+Reliable transport protocol over UDP
 
 ```
 
