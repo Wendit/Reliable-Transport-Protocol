@@ -1,9 +1,8 @@
 # 3251_pj2
 
 # APIs
-S
 reserved space
-#### Ex:
+
 ```
 
 ```
@@ -18,13 +17,13 @@ reserved space
   
 
 ===
-# API0 <a name="api_0"></a>
+## API#0 <a name="api_0"></a>
 
 ===
-# API1 <a name="api_1"></a>
+## API#1 <a name="api_1"></a>
 
 ===
-# API2 <a name="api_2"></a>
+## API#2 <a name="api_2"></a>
 
 ===
-# API3 <a name="api_3"></a>
+## API#3 <a name="api_3"></a>
