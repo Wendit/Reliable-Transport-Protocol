@@ -1,0 +1,39 @@
+Introduction 
+
+In this assignment you will design and implement your own Reliable Transfer Protocol -- lets call it RxP for now (you can choose another name if you prefer). 
+
+a. RxP must be as reliable as TCP 
+
+b. RxP must be connection-oriented 
+
+c. RxP must provide window-based flow control 
+
+d. RxP must provide byte-stream communication semantics (as TCP does). 
+
+ 
+
+2- Reliable Transport Protocol 
+
+The RxP design specification will need to specify at least the following: 
+
+    -  a high-level description of how RxP works and of any special features you have designed 
+    -  a detailed description of the RxP header structure and its header fields 
+    -  finite state-machine diagrams for the two RxP end-points 
+    -  a formal description of your API (the functions it exports to the application layer) 
+    -  algorithmic descriptions for any non-trivial algorithms in RxP (e.g., how you detect corrupted packets) 
+
+In the first page of the report (after the cover page), please provide clear answers to the following questions: 
+
+    -  Is your protocol non-pipelined (such as Stop-and-Wait) or pipelined (such as Selective Repeat)? 
+    -  How does your protocol handle lost packets? 
+    -  How does your protocol handle corrupted packets? 
+    -  How does your protocol handle duplicate packets? 
+    -  How does your protocol handle out-of-order packets? 
+    -  How does your protocol provide bi-directional data transfers? 
+    -  Does your protocol use any non-trivial checksum algorithm (i.e., anything more sophisticated than the IP 
+    checksum)?  
+
+Your protocol design must support all features to receive full credit (e.g. window-based flow control, bi-directional data transfer) even if you don't plan to completely implement them all.
+
+Please note: you may modify the RxP protocol after you submit your design report. Your design report will be graded based on what you submit by the first deadline. You will need to submit a revised design report together with the final implementation. If you make changes to your design during the implementation phase, please make sure that you highlight the differences between your original design report and the modified design report that describes what you have actually implemented. 
+
