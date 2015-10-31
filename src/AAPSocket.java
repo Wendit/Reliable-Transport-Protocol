@@ -1,3 +1,4 @@
+import java.net.InetAddress;
 
 public class AAPSocket {
 	private String server;
@@ -15,6 +16,14 @@ public class AAPSocket {
 	}
 	
 	public AAPOutputStream getOutputStream(){
+		return null;
+	}
+	
+	public void close(){
+		
+	}
+	
+	public InetAddress getRemoteSocketAddress(){
 		return null;
 	}
 }
