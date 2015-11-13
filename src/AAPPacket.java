@@ -70,6 +70,10 @@ public class AAPPacket implements Serializable{
 		this.payloadSize = buffer.getChar();
 		this.payload = new byte[payloadSize];
 		buffer.get(this.payload, 0, payloadSize); 
+		
+		if(this.checksum != getChecksum()){
+			
+		}
 	}
 	
 	public byte[] getData(){
