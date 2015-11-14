@@ -8,28 +8,36 @@ import java.net.SocketOption;
 import java.net.StandardSocketOptions;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class AAPInputStream {
-	private static final int MAX_WINDOW_SIZE = 3000;
+	private static final short MAX_WINDOW_SIZE = 3000;
+	private String senderAddress;
+	private int senderPort;
 	
 	private DatagramSocket recvSocket;
 	private DatagramPacket  recvPacket;
+	private DatagramPacket ackPacket;
+	private AAPPacket recvAAPPacket;
+	private AAPPacket ackAAPPacket;
 	
 	private short remainWindowSize;
 	
 	private ByteBuffer streamBuffer;
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
-	
-	private int expectedSeqNum;
+
 	private int currentSeqNum;
 	private int lastAckNum;
 	
-	public AAPInputStream(String address, int port,int initSeqNum) throws UnknownHostException, SocketException  {
+	public AAPInputStream(String address, int port,int initSeqNum, String senderAddress, int senderPort)
+			throws UnknownHostException, SocketException  {
 		streamBuffer = ByteBuffer.allocate(MAX_WINDOW_SIZE);
 		recvSocket = new DatagramSocket(port, InetAddress.getByName(address));
-		this.expectedSeqNum = initSeqNum + 1;
-		this.currentSeqNum = initSeqNum + 1;
-		this.lastAckNum = -1;//Haven't acked anything yet
+		this.currentSeqNum = incrementSeqNum(initSeqNum);
+		this.lastAckNum = incrementSeqNum(initSeqNum);
+		this.senderAddress = senderAddress;
+		this.senderPort = senderPort;
+
 	}
 	
 	public Byte read(){
@@ -48,37 +56,74 @@ public class AAPInputStream {
 		
 	}
 	
-	private byte[] receive() throws IOException{
-		boolean corrupted;
-		
+	private int receive() throws IOException, FlagNotFoundException, PayLoadSizeTooLargeException{
 		recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
+		int bytesRead = 0;
+		
 		while(true){
-			corrupted = false;
 			 try {
 				 recvSocket.receive(recvPacket);
 				 }catch(InterruptedIOException e){
 					 break;
 				 }
 			 
-			 try{
-				 getRecvAAPPacket(getAAPPacketData(recvPacket));
-			 }catch(FlagNotFoundException e){
-				 DebugUtils.debugPrint(e.getMessage());
-			 }catch(PacketCorruptedException e){
-				 corrupted = true;
-				 DebugUtils.debugPrint(e.getMessage());
-			 }
+			//error checking
+			//Drop everything except the packet which is not corrupted and is expected
+			//Always Ack last recieved packet upon recieving new packets
+			 if(!checkError(recvPacket) || ackAAPPacket == null){
+				 //If ackAAPPacket = null, construct new ackPacket
+				 //otherwise increment lastAckNum and update 
+				 //ackPacket
+				 if(ackAAPPacket != null){
+					 lastAckNum = incrementSeqNum(lastAckNum);
+				 }
+				 ackAAPPacket = new AAPPacket(
+						 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
+						 remainWindowSize, "ack".getBytes());
+				 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
+						  ackAAPPacket.getPacketData().length, 
+						  InetAddress.getByName(senderAddress), senderPort);
+			 }		 
+			 // Sending ack back
+			 recvSocket.send(ackPacket);
+
 		}
-		return null;
+		return bytesRead;
 	}
 	
 	private byte[] getAAPPacketData(DatagramPacket recvPacket){
-		return null;		
+		return Arrays.copyOfRange(recvPacket.getData(), 0, recvPacket.getLength());		
 	}
 	
 	private AAPPacket getRecvAAPPacket(byte[] packetData) throws FlagNotFoundException, IOException, PacketCorruptedException{
 		return new AAPPacket(packetData);
 	}
 
-
+	private int incrementSeqNum(int seqNum){
+		if(seqNum == Integer.MAX_VALUE){
+			seqNum = 0;
+		}else{
+			seqNum++;
+		}
+		return seqNum;
+	}
+	
+	private boolean checkError(DatagramPacket recvPacket) throws IOException{
+		boolean corrupted = false;
+		boolean errorOccurs = false;
+		try{
+			 recvAAPPacket = getRecvAAPPacket(getAAPPacketData(recvPacket));
+		 }catch(FlagNotFoundException e){
+			 DebugUtils.debugPrint(e.getMessage());
+		 }catch(PacketCorruptedException e){
+			 corrupted = true;
+			 DebugUtils.debugPrint(e.getMessage());
+		 }
+		 if(corrupted)
+			 errorOccurs = true;
+		 else if(recvAAPPacket.getSeqNum() != expectedSeqNum){
+					 errorOccurs = true;
+				 }
+		 return errorOccurs;	 
+	}
 }
