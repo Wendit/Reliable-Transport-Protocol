@@ -65,28 +65,8 @@ public class AAPInputStream {
 				 recvSocket.receive(recvPacket);
 				 }catch(InterruptedIOException e){
 					 break;
-				 }
-			 
-			//error checking
-			//Drop everything except the packet which is not corrupted and is expected
-			//Always Ack last recieved packet upon recieving new packets
-			 if(!checkError(recvPacket) || ackAAPPacket == null){
-				 //If ackAAPPacket = null, construct new ackPacket
-				 //otherwise increment lastAckNum and update 
-				 //ackPacket
-				 if(ackAAPPacket != null){
-					 lastAckNum = incrementSeqNum(lastAckNum);
-				 }
-				 ackAAPPacket = new AAPPacket(
-						 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
-						 remainWindowSize, "ack".getBytes());
-				 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
-						  ackAAPPacket.getPacketData().length, 
-						  InetAddress.getByName(senderAddress), senderPort);
-			 }		 
-			 // Sending ack back
-			 recvSocket.send(ackPacket);
-
+				 }		 
+			 sendAckBack();
 		}
 		return bytesRead;
 	}
@@ -121,9 +101,31 @@ public class AAPInputStream {
 		 }
 		 if(corrupted)
 			 errorOccurs = true;
-		 else if(recvAAPPacket.getSeqNum() != expectedSeqNum){
+		 else if(recvAAPPacket.getSeqNum() != lastAckNum){
 					 errorOccurs = true;
 				 }
 		 return errorOccurs;	 
+	}
+	
+	private void sendAckBack() throws UnknownHostException, IOException, FlagNotFoundException, PayLoadSizeTooLargeException{
+		//error checking
+		//Drop everything except the packet which is not corrupted and is expected
+		//Always Ack last recieved packet upon recieving new packets
+		 if(!checkError(recvPacket) || ackAAPPacket == null){
+			 //If ackAAPPacket = null, construct new ackPacket
+			 //otherwise increment lastAckNum and update 
+			 //ackPacket
+			 if(ackAAPPacket != null){
+				 lastAckNum = incrementSeqNum(lastAckNum);
+			 }
+			 ackAAPPacket = new AAPPacket(
+					 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
+					 remainWindowSize, "ack".getBytes());
+			 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
+					  ackAAPPacket.getPacketData().length, 
+					  InetAddress.getByName(senderAddress), senderPort);
+		 }		 
+		 // Sending ack back
+		 recvSocket.send(ackPacket);
 	}
 }
