@@ -40,23 +40,26 @@ public class AAPInputStream {
 
 	}
 	
-	public Byte read(){
-		return null;
-	}
-	
-	public int read(byte[] recvBuffer){
+	public Byte read() throws IOException{
+		receive();
 		return 0;
 	}
 	
-	public int read(byte[] recvBuffer, int off, int len){
+	public int read(byte[] recvBuffer) throws IOException{
+		receive();
+		return 0;
+	}
+	
+	public int read(byte[] recvBuffer, int off, int len) throws IOException{
+		receive();
 		return 0;
 	}
 	
 	public void close(){
-		
+
 	}
 	
-	private int receive() throws IOException, FlagNotFoundException, PayLoadSizeTooLargeException{
+	private int receive() throws IOException{
 		recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		int bytesRead = 0;
 		
@@ -104,10 +107,15 @@ public class AAPInputStream {
 		 else if(recvAAPPacket.getSeqNum() != lastAckNum){
 					 errorOccurs = true;
 				 }
+		//If no errors, put payload into our buffer and change the remaining window size
+		 else{
+			 streamBuffer.put(recvAAPPacket.getPayload());
+			 remainWindowSize -= recvAAPPacket.getPayload().length;
+		 }
 		 return errorOccurs;	 
 	}
 	
-	private void sendAckBack() throws UnknownHostException, IOException, FlagNotFoundException, PayLoadSizeTooLargeException{
+	private void sendAckBack() throws UnknownHostException, IOException{
 		//error checking
 		//Drop everything except the packet which is not corrupted and is expected
 		//Always Ack last recieved packet upon recieving new packets
@@ -118,9 +126,13 @@ public class AAPInputStream {
 			 if(ackAAPPacket != null){
 				 lastAckNum = incrementSeqNum(lastAckNum);
 			 }
-			 ackAAPPacket = new AAPPacket(
-					 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
-					 remainWindowSize, "ack".getBytes());
+			 try {
+				ackAAPPacket = new AAPPacket(
+						 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
+						 remainWindowSize, "ack".getBytes());
+			} catch (FlagNotFoundException | PayLoadSizeTooLargeException e) {
+				e.printStackTrace();
+			}
 			 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
 					  ackAAPPacket.getPacketData().length, 
 					  InetAddress.getByName(senderAddress), senderPort);
