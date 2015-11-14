@@ -10,6 +10,8 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 public class AAPInputStream {
+	private static final int MAX_WINDOW_SIZE = 3000;
+	
 	private DatagramSocket recvSocket;
 	private DatagramPacket  recvPacket;
 	
@@ -19,11 +21,15 @@ public class AAPInputStream {
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
 	
 	private int expectedSeqNum;
+	private int currentSeqNum;
+	private int lastAckNum;
 	
-	public AAPInputStream(String address, int port, int expectedSeqNum) throws UnknownHostException, SocketException  {
+	public AAPInputStream(String address, int port,int initSeqNum) throws UnknownHostException, SocketException  {
 		streamBuffer = ByteBuffer.allocate(MAX_WINDOW_SIZE);
 		recvSocket = new DatagramSocket(port, InetAddress.getByName(address));
-		this.expectedSeqNum = expectedSeqNum;
+		this.expectedSeqNum = initSeqNum + 1;
+		this.currentSeqNum = initSeqNum + 1;
+		this.lastAckNum = -1;//Haven't acked anything yet
 	}
 	
 	public Byte read(){
@@ -35,7 +41,6 @@ public class AAPInputStream {
 	}
 	
 	public int read(byte[] recvBuffer, int off, int len){
-		receive();
 		return 0;
 	}
 	
