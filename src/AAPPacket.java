@@ -26,9 +26,10 @@ public class AAPPacket implements Serializable{
 	 * |Payload
 	 */
 	
-	private static final int MAX_PAYLOAD_SIZE = 32;
+	public static final int MAX_PAYLOAD_SIZE = 256;
 	public static final int PACKET_SIZE = 4 + 4 + 2 + 2 + 8 + 1 + MAX_PAYLOAD_SIZE;
 	
+	public static final short NULL_FLAG = 0;
 	public static final short SYN_FLAG = 1;
 	public static final short ACK_FLAG = 1 << 1;
 	public static final short FIN_FLAG = 1 << 2;
@@ -52,6 +53,7 @@ public class AAPPacket implements Serializable{
 				&& flags != SYN_FLAG 
 				&& flags != ACK_FLAG 
 				&& flags != FIN_FLAG 
+				&& flags != NULL_FLAG
 			){
 			throw new FlagNotFoundException("Flag not found: "+flags);
 		}
@@ -91,11 +93,7 @@ public class AAPPacket implements Serializable{
 		if(this.checksum != getChecksum()){
 			throw new PacketCorruptedException("Checksum does not match. The packet is corrupted.");
 		}
-	}
-	
-	public byte[] getData(){
-		return payload;
-	}
+	} 
 	
 	public static Random getRand() {
 		return rand;

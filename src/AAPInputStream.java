@@ -9,9 +9,11 @@ import java.net.StandardSocketOptions;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class AAPInputStream {
-	private static final short MAX_WINDOW_SIZE = 3000;
+	private static final short MAX_WINDOW_SIZE = Short.MAX_VALUE;
 	private String senderAddress;
 	private int senderPort;
 	
@@ -23,7 +25,7 @@ public class AAPInputStream {
 	
 	private short remainWindowSize;
 	
-	private ByteBuffer streamBuffer;
+	private ByteBufferQueue streamBuffer;
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
 
 	private int currentSeqNum;
@@ -31,28 +33,39 @@ public class AAPInputStream {
 	
 	public AAPInputStream(String address, int port,int initSeqNum, String senderAddress, int senderPort)
 			throws UnknownHostException, SocketException  {
-		streamBuffer = ByteBuffer.allocate(MAX_WINDOW_SIZE);
 		recvSocket = new DatagramSocket(port, InetAddress.getByName(address));
-		this.currentSeqNum = incrementSeqNum(initSeqNum);
-		this.lastAckNum = incrementSeqNum(initSeqNum);
+		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
+		this.lastAckNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.senderAddress = senderAddress;
 		this.senderPort = senderPort;
-
+		this.streamBuffer = new ByteBufferQueue();
 	}
 	
 	public Byte read() throws IOException{
 		receive();
-		return 0;
+		return streamBuffer.getByte();
 	}
 	
 	public int read(byte[] recvBuffer) throws IOException{
 		receive();
-		return 0;
+		Byte temp;
+		for(int i = 0; i < recvBuffer.length; i++){
+			if((temp =  streamBuffer.getByte()) != null){
+				recvBuffer[i] = temp;
+			}
+		}
+		return Math.min(recvBuffer.length, streamBuffer.getLength());
 	}
 	
 	public int read(byte[] recvBuffer, int off, int len) throws IOException{
 		receive();
-		return 0;
+		Byte temp;
+		for(int i = 0; i < len; i++){
+			if((temp =  streamBuffer.getByte()) != null){
+				recvBuffer[off+i] = temp;
+			}
+		}
+		return Math.min(len, streamBuffer.getLength());
 	}
 	
 	public void close(){
@@ -81,15 +94,6 @@ public class AAPInputStream {
 	private AAPPacket getRecvAAPPacket(byte[] packetData) throws FlagNotFoundException, IOException, PacketCorruptedException{
 		return new AAPPacket(packetData);
 	}
-
-	private int incrementSeqNum(int seqNum){
-		if(seqNum == Integer.MAX_VALUE){
-			seqNum = 0;
-		}else{
-			seqNum++;
-		}
-		return seqNum;
-	}
 	
 	private boolean checkError(DatagramPacket recvPacket) throws IOException{
 		boolean corrupted = false;
@@ -110,7 +114,7 @@ public class AAPInputStream {
 		//If no errors, put payload into our buffer and change the remaining window size
 		 else{
 			 streamBuffer.put(recvAAPPacket.getPayload());
-			 remainWindowSize -= recvAAPPacket.getPayload().length;
+			 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
 		 }
 		 return errorOccurs;	 
 	}
@@ -124,7 +128,7 @@ public class AAPInputStream {
 			 //otherwise increment lastAckNum and update 
 			 //ackPacket
 			 if(ackAAPPacket != null){
-				 lastAckNum = incrementSeqNum(lastAckNum);
+				 lastAckNum = AAPUtils.incrementSeqNum(lastAckNum);
 			 }
 			 try {
 				ackAAPPacket = new AAPPacket(
