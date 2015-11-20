@@ -22,13 +22,25 @@
 
  * 
  * */
-public class FAA_client {
+public class FAA_client extends FAA_UI{
+
+	public FAA_client() {
+		super(MODE.CLIENT);
+		// TODO Auto-generated constructor stub
+	}
 
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	public static void main(String[] args) throws IOException {
+
+		validateInput(args);
+		
+		//startClient();
+		
+		while(userCommand() != COMMAND.TERMINATE) {
+			System.out.println("ttttttt");
+		}
 
 	}
 

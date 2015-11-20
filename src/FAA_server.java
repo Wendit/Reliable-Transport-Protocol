@@ -17,14 +17,77 @@
  * Command: terminate Shut-down FxA-Server gracefully. 
  * 
  */
-public class FAA_server {
+public class FAA_server extends FAA_UI/* implements Runnable*/{
+
+	private static boolean running = true;
+	public FAA_server() {
+		super(MODE.SERVER);
+		// TODO Auto-generated constructor stub
+	}
 
 	/**
 	 * @param args
+	 * @throws IOException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, IllegalArgumentException {
 		// TODO Auto-generated method stub
-
+		validateInput(args);
+		
+		ServerSocket server = new ServerSocket(port);
+		//AAPServerSocket server = new AAPServerSocket(port);
+	/*	
+		new Thread(new Runnable(){
+			public void run(){
+				while(userCommand() != COMMAND.TERMINATE) {
+					if(userCommand() == COMMAND.WINDOW) {
+						//setwindowsize; 
+					}
+				}
+				running = false;
+				
+			}
+		});
+		*/
+		//startServer(port);
+		
+		while (running) {
+			//if(userCommand()
+			handleCommands(userCommand(), server);
+			handleClient(server.accept());
+			
+		}
+		
+		server.close();
 	}
+	
+	private static void handleClient(Socket clientSocket) throws IOException { 
+	//private static void handleClient(AAPSocket clientSocket) {
+		COMMAND recvcmd;
+		/*
+		AAPInputStream in = clientSocket.getInputStream();
+	    AAPOutputStream out = clientSocket.getOutputStream();
+		*/
+		InputStream in = clientSocket.getInputStream();
+	    OutputStream out = clientSocket.getOutputStream();
+	    
+		
+		clientSocket.close();
+		return;
+	}
+
+	protected static void handleCommands(COMMAND command, ServerSocket server) {
+	//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
+		if(command == COMMAND.TERMINATE)
+			running = false;
+		if(command == COMMAND.WINDOW) {
+			//server.setWindowSize(windowSize);
+		}
+	}
+/*
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+	}
+	*/
 
 }

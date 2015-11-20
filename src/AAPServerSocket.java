@@ -4,8 +4,10 @@ public class AAPServerSocket {
 	/**
 	 * Default constructor
 	 */
+	/*
 	public AAPServerSocket() {
-	}
+		
+	}*/
 	
 	public AAPServerSocket(int port) {
 		this.port = port;
