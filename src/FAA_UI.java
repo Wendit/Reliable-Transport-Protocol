@@ -103,7 +103,8 @@ public class FAA_UI {
 	/*
 	 * Here are commands
 	 * */
-	protected static boolean setWindow() {
+	protected static boolean setWindowSize(int newSize) {
+		
 		return false;
 	}
 	
@@ -124,7 +125,7 @@ public class FAA_UI {
   
 	protected static boolean recvFile(File file, InputStream in) {
 		
-		return null;
+		return false;
 	}
 	
 }

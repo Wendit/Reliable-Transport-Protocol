@@ -1,3 +1,9 @@
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 /*
  * 
  * FxA SERVER
@@ -80,7 +86,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		if(command == COMMAND.TERMINATE)
 			running = false;
 		if(command == COMMAND.WINDOW) {
-			//server.setWindowSize(windowSize);
+			setWindowSize(windowSize);
 		}
 	}
 /*
