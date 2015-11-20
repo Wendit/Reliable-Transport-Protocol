@@ -87,19 +87,11 @@ public class AAPInputStream {
 		return bytesRead;
 	}
 	
-	private byte[] getAAPPacketData(DatagramPacket recvPacket){
-		return Arrays.copyOfRange(recvPacket.getData(), 0, recvPacket.getLength());		
-	}
-	
-	private AAPPacket getRecvAAPPacket(byte[] packetData) throws FlagNotFoundException, IOException, PacketCorruptedException{
-		return new AAPPacket(packetData);
-	}
-	
 	private boolean checkError(DatagramPacket recvPacket) throws IOException{
 		boolean corrupted = false;
 		boolean errorOccurs = false;
 		try{
-			 recvAAPPacket = getRecvAAPPacket(getAAPPacketData(recvPacket));
+			 recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
 		 }catch(FlagNotFoundException e){
 			 DebugUtils.debugPrint(e.getMessage());
 		 }catch(PacketCorruptedException e){
