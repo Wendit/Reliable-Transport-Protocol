@@ -25,7 +25,7 @@ import java.net.Socket;
  */
 public class FAA_server extends FAA_UI/* implements Runnable*/{
 
-	private static boolean running = true;
+	//private static boolean running = true;
 	public FAA_server() {
 		super(MODE.SERVER);
 		// TODO Auto-generated constructor stub
