@@ -79,23 +79,6 @@ public class AAPOutputStream {
 		currentSeqNum = AAPUtils.incrementSeqNum(currentSeqNum);
 	}
 	
-	private void putPacketsInWindow() throws IOException{
-		while(packetWindow.size() < MAX_WINDOW_SIZE && packetsList.size() != 0){
-			moveListHeadToWindow();
-		}
-	}
-	private void moveListHeadToWindow(){
-		if(packetWindow.size() < MAX_WINDOW_SIZE){
-			packetWindow.add(packetsList.poll());
-		}
-	}
-	
-	private void moveWindowTailToWList(int windowSize){
-		if(packetWindow.size() < MAX_WINDOW_SIZE){
-			packetWindow.add(packetsList.poll());
-		}
-	}
-	
 	private void sendPackets() throws IOException{
 	  putPacketsInWindow();
 	  //First send all packets in window
@@ -128,7 +111,9 @@ public class AAPOutputStream {
 						 recvAAPPacket.getFlags() == AAPPacket.SYN_ACK_FLAG ){
 					 lastAcked = recvAAPPacket.getAckNum();
 					 //Adjust window size according to remaining buffe size
-					 adjustWindowSize((int)Math.floor(recvAAPPacket.getWindowSize()/AAPPacket.MAX_PAYLOAD_SIZE));
+					 currentWindowSize = (short) Math.min(MAX_WINDOW_SIZE,(short)Math.floor
+							 (recvAAPPacket.getWindowSize()/AAPPacket.MAX_PAYLOAD_SIZE));
+					 adjustWindowSize(currentWindowSize);
 				 }
 			 }catch(FlagNotFoundException e){
 				 DebugUtils.debugPrint(e.getMessage());
@@ -139,8 +124,29 @@ public class AAPOutputStream {
 		return lastAcked;
 	}
 	
-	private void adjustWindowSize(int newIndowSize) throws IOException{
-		
+	private void adjustWindowSize(int newWindowSize) throws IOException{
+		while(packetWindow.size()>newWindowSize){
+			moveWindowTailToList();
+		}
+		while(packetWindow.size() < newWindowSize && packetsList.size()!=0){
+			moveListHeadToWindow();
+		}
+	}
+	
+	
+	private void putPacketsInWindow() throws IOException{
+		while(packetWindow.size() < currentWindowSize && packetsList.size() != 0){
+			moveListHeadToWindow();
+		}
+	}
+	private void moveListHeadToWindow(){
+		if(packetWindow.size() < currentWindowSize){
+			packetWindow.add(packetsList.poll());
+		}
+	}
+	
+	private void moveWindowTailToList(){
+			packetsList.push(packetWindow.pollLast());
 	}
 	
 }
