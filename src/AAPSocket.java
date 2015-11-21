@@ -1,18 +1,23 @@
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class AAPSocket {
-	private String server;
-	private int servPort;
+	private String remoteSocketAddress;
+	private int remoteSocketPort;
+	private int localBindPort;
 	
 	/**
 	 * Default constructor
 	 */
-	public AAPSocket(String server,int servPort){
-		
+	public AAPSocket(String remoteSocketAddress,int remoteSocketPort, int localBindPort){
+		this.remoteSocketAddress = remoteSocketAddress;
+		this.remoteSocketPort = remoteSocketPort;
+		this.localBindPort = localBindPort;
 	}
 	
-	public AAPInputStream getInputStream(){
-		return null;
+	public AAPInputStream getInputStream() throws UnknownHostException, SocketException{
+		return new AAPInputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
 	}
 	
 	public AAPOutputStream getOutputStream(){
