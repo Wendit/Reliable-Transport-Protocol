@@ -28,9 +28,9 @@ public class AAPOutputStream {
 	
 	private int currentSeqNum;
 	
-	public AAPOutputStream(String address, int port,int initSeqNum, String recverAddress, int recverPort)
+	public AAPOutputStream(int port,int initSeqNum, String recverAddress, int recverPort)
 			throws UnknownHostException, SocketException  {
-		sendSocket = new DatagramSocket(port, InetAddress.getByName(address));
+		sendSocket = new DatagramSocket(port);
 		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.recverAddress = recverAddress;
 		this.recverPort = recverPort;
@@ -57,7 +57,7 @@ public class AAPOutputStream {
 	}
 	
 	public void close(){
-		
+		sendSocket.close();
 	}
 	
 	private void send(byte[] b) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{

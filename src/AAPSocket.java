@@ -1,29 +1,43 @@
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class AAPSocket {
-	private String server;
-	private int servPort;
+	private String remoteSocketAddress;
+	private int remoteSocketPort;
+	private int localBindPort;
+	private AAPInputStream inputStream;
+	private AAPOutputStream outputStream;
 	
 	/**
 	 * Default constructor
+	 * @throws SocketException 
+	 * @throws UnknownHostException 
 	 */
-	public AAPSocket(String server,int servPort){
+	public AAPSocket(String remoteSocketAddress,int remoteSocketPort, int localBindPort) throws UnknownHostException, SocketException{
+		this.remoteSocketAddress = remoteSocketAddress;
+		this.remoteSocketPort = remoteSocketPort;
+		this.localBindPort = localBindPort;
+		this.inputStream = new AAPInputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
+		this.outputStream = new AAPOutputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
 		
+		//Three way handshake here
 	}
 	
 	public AAPInputStream getInputStream(){
-		return null;
+		return inputStream;
 	}
 	
 	public AAPOutputStream getOutputStream(){
-		return null;
+		return outputStream;
 	}
 	
 	public void close(){
-		
+		inputStream.close();
+		outputStream.close();
 	}
 	
-	public InetAddress getRemoteSocketAddress(){
-		return null;
+	public InetAddress getRemoteSocketAddress() throws UnknownHostException{
+		return InetAddress.getByName(remoteSocketAddress);
 	}
 }

@@ -14,8 +14,8 @@ import java.util.Queue;
 
 public class AAPInputStream {
 	private static final short MAX_WINDOW_SIZE = Short.MAX_VALUE;
-	private String senderAddress;
-	private int senderPort;
+	private String remoteSocketAddress;
+	private int remoteSocketPort;
 	
 	private DatagramSocket recvSocket;
 	private DatagramPacket  recvPacket;
@@ -31,13 +31,13 @@ public class AAPInputStream {
 	private int currentSeqNum;
 	private int lastAckNum;
 	
-	public AAPInputStream(String address, int port,int initSeqNum, String senderAddress, int senderPort)
+	public AAPInputStream(int port,int initSeqNum, String remoteSocketAddress, int remoteSocketPort)
 			throws UnknownHostException, SocketException  {
-		recvSocket = new DatagramSocket(port, InetAddress.getByName(address));
+		recvSocket = new DatagramSocket(port);
 		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.lastAckNum = AAPUtils.incrementSeqNum(initSeqNum);
-		this.senderAddress = senderAddress;
-		this.senderPort = senderPort;
+		this.remoteSocketAddress = remoteSocketAddress;
+		this.remoteSocketPort = remoteSocketPort;
 		this.streamBuffer = new ByteBufferQueue();
 	}
 	
@@ -69,7 +69,7 @@ public class AAPInputStream {
 	}
 	
 	public void close(){
-
+		recvSocket.close();
 	}
 	
 	private int receive() throws IOException{
@@ -131,7 +131,7 @@ public class AAPInputStream {
 			}
 			 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
 					  ackAAPPacket.getPacketData().length, 
-					  InetAddress.getByName(senderAddress), senderPort);
+					  InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
 		 }		 
 		 // Sending ack back
 		 recvSocket.send(ackPacket);
