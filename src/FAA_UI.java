@@ -126,7 +126,7 @@ public class FAA_UI {
 		return false;
 	}
   
-	protected static boolean recvFile(File file, InputStream in) {
+	protected static boolean recvFile(String filePath, InputStream in) {
 		
 		return false;
 	}

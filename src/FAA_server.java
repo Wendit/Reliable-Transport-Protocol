@@ -1,3 +1,4 @@
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -94,13 +95,13 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	}
 
 
-	private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) {
+	private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) throws IOException {
 		if(recvcmd == COMMAND.CONNECT) {
 			System.out.println("Handling Client: " + new String(clientSocket.getInetAddress().getAddress()));
 		} else if(recvcmd == COMMAND.GET) {
-			
+			sendFile(cmd_extra, out);
 		} else if (recvcmd == COMMAND.POST) {
-			
+			recvFile(cmd_extra, in);
 		}
 		
 	}
