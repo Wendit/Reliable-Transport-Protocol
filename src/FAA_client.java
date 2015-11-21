@@ -3,6 +3,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /*
  * 
@@ -29,6 +30,11 @@ import java.net.Socket;
  * 
  * */
 public class FAA_client extends FAA_UI{
+	
+	private static Socket client;
+	private static InputStream in;
+    private static OutputStream out;
+    private static boolean connected = false;
 
 	public FAA_client() {
 		super(MODE.CLIENT);
@@ -47,30 +53,34 @@ public class FAA_client extends FAA_UI{
 		AAPInputStream in = client.getInputStream();
 	    AAPOutputStream out = client.getOutputStream();
 		*/
-		Socket client = new Socket(emu_addr, emu_port);
+		/*
+		client = new Socket(emu_addr, emu_port);
 		InputStream in = client.getInputStream();
 	    OutputStream out = client.getOutputStream();
+	    */
 		
 		
 		while(running) {
-			
-			handleCommands(userCommand(), client);	
+			System.out.println("Connected: " + connected);
+			handleCommands(userCommand());	
 		}
 
 	}
 	
-	protected static void handleCommands(COMMAND command, Socket client) {
+	protected static void handleCommands(COMMAND command) throws IOException {
 		//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
-		if(command == COMMAND.CONNECT) {
-			connect();
-		} else if (command == COMMAND.GET) {
+		if(command == COMMAND.CONNECT && !connected) {
+			connected = connect();
+			//connected = true;
+		} else if (command == COMMAND.GET && connected) {
 			get("");
-		} else if (command == COMMAND.POST) {
+		} else if (command == COMMAND.POST  && connected) {
 			post("");
-		} else if (command == COMMAND.INVALID){
+		} else if (command == COMMAND.UNKNOWN  && connected){
 			System.out.println("Invalid command input, please retry");
-		} else if(command == COMMAND.DISCONNECT){
+		} else if(command == COMMAND.DISCONNECT  && connected){
 			client.close();
+			connected = false;
 		}
 	}
 	
@@ -85,8 +95,13 @@ public class FAA_client extends FAA_UI{
 		return false;
 	}
 
-	private static boolean connect() {
-		
+	private static boolean connect() throws UnknownHostException, IOException {
+		client = new Socket(emu_addr, emu_port);
+		InputStream in = client.getInputStream();
+	    OutputStream out = client.getOutputStream();
+	    
+	    
+	    
 		return false;
 	}
 	

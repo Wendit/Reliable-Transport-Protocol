@@ -3,6 +3,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+
 
 /*
  * 
@@ -69,6 +71,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	private static void handleClient(Socket clientSocket) throws IOException { 
 	//private static void handleClient(AAPSocket clientSocket) {
 		COMMAND recvcmd;
+		boolean curClient = true;
 		/*
 		AAPInputStream in = clientSocket.getInputStream();
 	    AAPOutputStream out = clientSocket.getOutputStream();
@@ -76,12 +79,41 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		InputStream in = clientSocket.getInputStream();
 	    OutputStream out = clientSocket.getOutputStream();
 	    
-	    while()
+	    /*
+	     * Test purpose
+	     * */
+	    SocketAddress clientAddress = clientSocket.getRemoteSocketAddress();
+	    System.out.println("Server: Handling client at " + clientAddress);
 	    
+	    while ( curClient && (recvcmd = getRequest(in)) != COMMAND.DISCONNECT) {
+	    	processRequest(in, out, recvcmd, clientSocket);
+	    }
 		
 		clientSocket.close();
 		return;
 	}
+
+
+	private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) {
+		if(recvcmd == COMMAND.CONNECT) {
+			System.out.println("Handling Client: " + new String(clientSocket.getInetAddress().getAddress()));
+		} else if(recvcmd == COMMAND.GET) {
+			
+		} else if (recvcmd == COMMAND.POST) {
+			
+		}
+		
+	}
+
+	private static COMMAND getRequest(InputStream in) throws IOException {
+		int recvSize = 0;
+		String request = "";
+		if((recvSize = in.read(recvBuff)) != -1) {
+			request = new String(recvBuff);
+		}
+		return processCommand(request, false); // ***********************************
+	}
+	
 
 	protected static void handleCommands(COMMAND command, ServerSocket server) {
 	//protected static void handleCommands(COMMAND command, AAPServerSocket server) {

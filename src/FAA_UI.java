@@ -13,7 +13,7 @@ import java.net.Socket;
 public class FAA_UI {
 
     protected enum MODE {CLIENT,SERVER};
-    protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, INVALID};
+    protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
     //protected enum 
     private MODE mode;
@@ -21,8 +21,10 @@ public class FAA_UI {
     protected static String emu_addr;
     protected static int emu_port;
     
-    protected static COMMAND command;
     protected static int windowSize;
+    protected static byte[] recvBuff = new byte[256];
+    
+    protected static COMMAND command;
     protected static String cmd_extra;
     
 
@@ -54,7 +56,7 @@ public class FAA_UI {
     	String input = keyboard.nextLine();
     	
     	try{
-    		command = processCommand(input);
+    		command = processCommand(input, false);
     	} catch(IOException e) {
     		throw e;
     	}
@@ -62,8 +64,8 @@ public class FAA_UI {
     	return command;
     }
     
-    protected static COMMAND processCommand(String input) throws IOException {
-    	String cmd = formatInput(input);
+    protected static COMMAND processCommand(String input, boolean req) throws IOException {
+    	String cmd = formatInput(input, req);
     	COMMAND retcmd;
     	
     	switch(cmd) {
@@ -84,18 +86,18 @@ public class FAA_UI {
 							break;
 		case "post":		retcmd = COMMAND.POST;
 							break;
-		default:			retcmd = COMMAND.INVALID;
+		default:			retcmd = COMMAND.UNKNOWN;
 							break;
     	}
     	return retcmd;
     }
 
-	private static String formatInput(String input) {
+	private static String formatInput(String input, boolean req) {
 		// TODO Auto-generated method stub
 		input = input.replaceAll("(\\s|\\t)+"," ");
 		input = input.trim();
 		String[] format = input.split("\\s");
-		if(format.length > 1) {
+		if(!req && format.length > 1) {
 			cmd_extra = format[1];
 		}
 		return format[0].toLowerCase();

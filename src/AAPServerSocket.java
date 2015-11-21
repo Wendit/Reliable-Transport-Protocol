@@ -15,7 +15,7 @@ public class AAPServerSocket {
 	}
 	
 	public AAPSocket accept(){
-		
+		return null;
 	}
 	
 	public void bind(){
