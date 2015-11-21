@@ -69,7 +69,7 @@ public class AAPInputStream {
 	}
 	
 	public void close(){
-
+		recvSocket.close();
 	}
 	
 	private int receive() throws IOException{

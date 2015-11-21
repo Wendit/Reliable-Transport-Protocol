@@ -57,7 +57,7 @@ public class AAPOutputStream {
 	}
 	
 	public void close(){
-		
+		sendSocket.close();
 	}
 	
 	private void send(byte[] b) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
