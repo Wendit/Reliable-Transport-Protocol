@@ -59,7 +59,6 @@ public class FAA_client extends FAA_UI{
 	    OutputStream out = client.getOutputStream();
 	    */
 		
-		
 		while(running) {
 			System.out.println("Connected: " + connected);
 			handleCommands(userCommand());	
@@ -70,8 +69,7 @@ public class FAA_client extends FAA_UI{
 	protected static void handleCommands(COMMAND command) throws IOException {
 		//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
 		if(command == COMMAND.CONNECT && !connected) {
-			connected = connect();
-			//connected = true;
+			connect();
 		} else if (command == COMMAND.GET && connected) {
 			get("");
 		} else if (command == COMMAND.POST  && connected) {
@@ -79,8 +77,7 @@ public class FAA_client extends FAA_UI{
 		} else if (command == COMMAND.UNKNOWN  && connected){
 			System.out.println("Invalid command input, please retry");
 		} else if(command == COMMAND.DISCONNECT  && connected){
-			client.close();
-			connected = false;
+			disconnect();
 		}
 	}
 	
@@ -95,19 +92,21 @@ public class FAA_client extends FAA_UI{
 		return false;
 	}
 
-	private static boolean connect() throws UnknownHostException, IOException {
+	private static void connect() throws UnknownHostException, IOException {
 		client = new Socket(emu_addr, emu_port);
 		InputStream in = client.getInputStream();
 	    OutputStream out = client.getOutputStream();
 	    
-	    
-	    
-		return false;
+	    out.write(new String("connect").getBytes());
+	    connected = true;
+	//	return true;
 	}
 	
-	private static boolean disconnet() {
-		
-		return false;
+	private static void disconnect() throws IOException {
+		out.write(new String("disconnect").getBytes());
+		client.close();
+		connected = false;
+		//return false;
 	}
 
 }

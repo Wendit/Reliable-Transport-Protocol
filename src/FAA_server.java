@@ -90,6 +90,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	    	processRequest(in, out, recvcmd, clientSocket);
 	    }
 		
+	    System.out.println("Clent close the connection");
 		clientSocket.close();
 		return;
 	}
@@ -110,7 +111,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		int recvSize = 0;
 		String request = "";
 		if((recvSize = in.read(recvBuff)) != -1) {
-			request = new String(recvBuff);
+			request = new String(recvBuff, 0, recvSize);
 		}
 		return processCommand(request, false); // ***********************************
 	}
