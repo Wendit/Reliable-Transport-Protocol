@@ -76,6 +76,8 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		InputStream in = clientSocket.getInputStream();
 	    OutputStream out = clientSocket.getOutputStream();
 	    
+	    while()
+	    
 		
 		clientSocket.close();
 		return;

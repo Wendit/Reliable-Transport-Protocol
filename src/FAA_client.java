@@ -56,8 +56,7 @@ public class FAA_client extends FAA_UI{
 		
 		while(running) {
 			
-			handleCommands(userCommand(), client);
-			
+			handleCommands(userCommand(), client);	
 		}
 
 	}
@@ -65,16 +64,17 @@ public class FAA_client extends FAA_UI{
 	protected static void handleCommands(COMMAND command, Socket client) {
 		//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
 		if(command == COMMAND.CONNECT) {
-			
+			connect();
 		} else if (command == COMMAND.GET) {
-			
+			get("");
 		} else if (command == COMMAND.POST) {
-			
-			
+			post("");
 		} else if (command == COMMAND.INVALID){
-			
-		} else {}
+			System.out.println("Invalid command input, please retry");
+		} else if(command == COMMAND.DISCONNECT){
+			client.close();
 		}
+	}
 	
 	
 	private static boolean get(String fileName) {
