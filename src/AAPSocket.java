@@ -20,6 +20,8 @@ public class AAPSocket {
 		this.localBindPort = localBindPort;
 		this.inputStream = new AAPInputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
 		this.outputStream = new AAPOutputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
+		
+		//Three way handshake here
 	}
 	
 	public AAPInputStream getInputStream(){
