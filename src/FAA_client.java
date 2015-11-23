@@ -93,19 +93,23 @@ public class FAA_client extends FAA_UI{
     }
 
     private static void connect() throws UnknownHostException, IOException {
-	client = new Socket(emu_addr, emu_port);
-	InputStream in = client.getInputStream();
-	OutputStream out = client.getOutputStream();
-	    
+	try {
+    client = new Socket(emu_addr, emu_port);
+	in = client.getInputStream();
+	out = client.getOutputStream();
+	//client.bind(port);	    
 	out.write(new String("connect").getBytes());
 	connected = true;
+	} catch(Exception e) {
+		System.out.println("Error happens " + e.getMessage() + ". please re-run.");
+	}
 	//	return true;
     }
 	
     private static void disconnect() throws IOException {
-	out.write(new String("disconnect").getBytes());
-	client.close();
-	connected = false;
+ 		out.write(new String("disconnect").getBytes());
+ 		client.close();
+ 		connected = false;
 	//return false;
     }
 

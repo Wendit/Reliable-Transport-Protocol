@@ -17,7 +17,7 @@ import java.net.SocketAddress;
  X: the port number at which the FxA-server’s UDP socket should bind to (odd number) 
 
  A: the IP address of NetEmu
- P: the UDP port number of NetEmu 
+ P: the UDP port number of NetEmu
  * 
  * Command: window W (only for projects that support pipelined and bi- directional transfers) 
 
@@ -41,7 +41,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     public static void main(String[] args) throws IOException, IllegalArgumentException {
 	// TODO Auto-generated method stub
 	validateInput(args);
-		
+	System.out.println("Server: openning port " + port);
 	ServerSocket server = new ServerSocket(port);
 	//AAPServerSocket server = new AAPServerSocket(port);
 	/*	
@@ -60,12 +60,13 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	while (running) {
 	    //if(userCommand()
 	    handleCommands(userCommand(), server);
-	    handleClient(server.accept());
+	    if(running)
+	    	handleClient(server.accept());
 	}
 	server.close();
     }
 	
-    private static void handleClient(Socket clientSocket) throws IOException { 
+    private static void handleClient(Socket clientSocket) throws IOException {
 	//private static void handleClient(AAPSocket clientSocket) {
 	COMMAND recvcmd;
 	boolean curClient = true;
@@ -100,7 +101,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	} else if (recvcmd == COMMAND.POST) {
 	    recvFile(cmd_extra, in);
 	}
-		
+
     }
 
     private static COMMAND getRequest(InputStream in) throws IOException {
@@ -111,7 +112,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	}
 	return processCommand(request, false); // ***********************************
     }
-	
+
 
     protected static void handleCommands(COMMAND command, ServerSocket server) {
 	//protected static void handleCommands(COMMAND command, AAPServerSocket server) {

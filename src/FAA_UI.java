@@ -20,13 +20,13 @@ public class FAA_UI {
     protected static int port;
     protected static String emu_addr;
     protected static int emu_port;
-    
+
     protected static int windowSize;
     protected static byte[] recvBuff = new byte[256];
-    
+
     protected static COMMAND command;
     protected static String cmd_extra;
-    
+
 
     public FAA_UI(MODE mode) {
     	this.mode = mode;
@@ -52,7 +52,8 @@ public class FAA_UI {
     }
     
     protected static COMMAND userCommand() throws IOException{	
-	Scanner keyboard = new Scanner(System.in);
+    	System.out.println("Welcome to FAA, please input your command");
+    	Scanner keyboard = new Scanner(System.in);
     	String input = keyboard.nextLine();
     	
     	try{
@@ -60,14 +61,14 @@ public class FAA_UI {
     	} catch(IOException e) {
 	    throw e;
     	}
-
+    	
+    	System.out.println("You have typed in " + input);
     	return command;
     }
     
     protected static COMMAND processCommand(String input, boolean req) throws IOException {
     	String cmd = formatInput(input, req);
     	COMMAND retcmd;
-    	
     	switch(cmd) {
     	case "window":		retcmd = COMMAND.WINDOW;
 	    try {
