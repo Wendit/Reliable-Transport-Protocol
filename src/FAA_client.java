@@ -74,8 +74,10 @@ public class FAA_client extends FAA_UI{
 	if(command == COMMAND.CONNECT && !connected) {
 	    connect();
 	} else if (command == COMMAND.GET && connected) {
+		//if
 	    get(cmd_extra);
 	} else if (command == COMMAND.POST  && connected) {
+		//if
 	    post(cmd_extra);
 	} else if (command == COMMAND.UNKNOWN  && connected){
 	    System.out.println("Invalid command input, please retry");
@@ -90,8 +92,8 @@ public class FAA_client extends FAA_UI{
     	out.write(new String("get").getBytes());
     	String response = "";
     	int size = in.read(recvBuff);
-    	if(response.equalsIgnoreCase("ready to transfer")) {
-    		recvFile(CLIENT_DOWNLOAD_PATH, in);
+    	if(response.equalsIgnoreCase("#ready to transfer#")) {
+    		return recvFile(CLIENT_DOWNLOAD_PATH, in);
     	}
     	} catch (IOException e) {
     		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
@@ -100,7 +102,16 @@ public class FAA_client extends FAA_UI{
     }
 	
     private static boolean post(String fileName) {
-		
+    	try {
+        	out.write(new String("post").getBytes());
+        	String response = "";
+        	int size = in.read(recvBuff);
+        	if(response.equalsIgnoreCase("#ready to receive#")) {
+        		return sendFile(CLIENT_UPLOAD_PATH, out);
+        	}
+        	} catch (IOException e) {
+        		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
+        	}
 	return false;
     }
 

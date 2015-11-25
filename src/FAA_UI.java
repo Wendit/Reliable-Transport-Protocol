@@ -130,7 +130,7 @@ public class FAA_UI {
     	
     	//ack client the transmission
     	try {
-    	out.write(new String("ready to transfer").getBytes());
+    	out.write(new String("#ready to transfer#").getBytes());
     	} catch(IOException e) {
     		System.out.println("error detected while trying to transfer file: " + e.getMessage());
     		return false;
