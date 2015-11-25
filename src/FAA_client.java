@@ -71,35 +71,35 @@ public class FAA_client extends FAA_UI{
 	
     protected static void handleCommands(COMMAND command) throws IOException {
 	//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
-	if(command == COMMAND.CONNECT && !connected) {
-	    connect();
-	} else if (command == COMMAND.GET && connected) {
-		//if
-	    get(cmd_extra);
-	} else if (command == COMMAND.POST  && connected) {
-		//if
-	    post(cmd_extra);
-	} else if (command == COMMAND.UNKNOWN  && connected){
-	    System.out.println("Invalid command input, please retry");
-	} else if(command == COMMAND.DISCONNECT  && connected){
-	    disconnect();
-	}
+		if(command == COMMAND.CONNECT && !connected) {
+		    connect();
+		} else if (command == COMMAND.GET && connected) {
+			//if
+		    get(cmd_extra);
+		} else if (command == COMMAND.POST  && connected) {
+			//if
+		    post(cmd_extra);
+		} else if (command == COMMAND.UNKNOWN  && connected){
+		    System.out.println("Invalid command input, please retry");
+		} else if(command == COMMAND.DISCONNECT  && connected){
+		    disconnect();
+		}
     }
 	
 	
     private static boolean get(String fileName) throws IOException {
     	try {
-    	out.write(new String("get " + cmd_extra).getBytes());
-    	String response = "";
-    	int size = in.read(recvBuff);
-    	response = new String(recvBuff, 0, size);
-    	if(response.equalsIgnoreCase("#ready to transfer#")) {
-    		return recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
-    	}
-    	} catch (IOException e) {
-    		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
-    	}
-	return false;
+	    	out.write(new String("get " + cmd_extra).getBytes());
+	    	String response = "";
+	    	int size = in.read(recvBuff);
+	    	response = new String(recvBuff, 0, size);
+	    	if(response.equalsIgnoreCase("#ready to transfer#")) {
+	    		return recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
+	    	}
+	    	} catch (IOException e) {
+	    		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
+	    	}
+    	return false;
     }
 	
     private static boolean post(String fileName) {
@@ -114,27 +114,27 @@ public class FAA_client extends FAA_UI{
         	} catch (IOException e) {
         		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
         	}
-	return false;
+    	return false;
     }
 
     private static void connect() throws UnknownHostException, IOException {
 	try {
 		
-    client = new Socket(emu_addr, emu_port);
-	in = client.getInputStream();
-	out = client.getOutputStream();
-	
-		/*
-		//client = new Socket();
-		//client.bind(new InetSocketAddress(emu_addr, port));
-		
-		System.out.println("bind to local host: "  + " port: " + client.getLocalPort());
-		client.connect(new InetSocketAddress(emu_addr, emu_port));
+	    client = new Socket(emu_addr, emu_port);
 		in = client.getInputStream();
 		out = client.getOutputStream();
-		*/
-	out.write(new String("connect").getBytes());
-	connected = true;
+		
+			/*
+			//client = new Socket();
+			//client.bind(new InetSocketAddress(emu_addr, port));
+			
+			System.out.println("bind to local host: "  + " port: " + client.getLocalPort());
+			client.connect(new InetSocketAddress(emu_addr, emu_port));
+			in = client.getInputStream();
+			out = client.getOutputStream();
+			*/
+		out.write(new String("connect").getBytes());
+		connected = true;
 	} catch(Exception e) {
 		System.out.println("Error happens " + e.getMessage() + ". please re-run.");
 	}

@@ -36,19 +36,19 @@ public class FAA_UI {
      * Here are methods for user input
      * */
     protected static void validateInput(String[] args) throws IOException {
-	if(args.length != 3) {
-	    throw new IllegalArgumentException("Parameter(s): X<Port>  A<Add> P<NetEmu port>");
-	    // return false;
-	} else {
-	    try{
-		port = Integer.parseInt(args[0]);
-		emu_addr = args[1];
-		emu_port = Integer.parseInt(args[2]);
-	    } catch (IllegalArgumentException e) {
-		throw e;
-	    }
-			
-	}
+		if(args.length != 3) {
+		    throw new IllegalArgumentException("Parameter(s): X<Port>  A<Add> P<NetEmu port>");
+		    // return false;
+		} else {
+		    try{
+			port = Integer.parseInt(args[0]);
+			emu_addr = args[1];
+			emu_port = Integer.parseInt(args[2]);
+		    } catch (IllegalArgumentException e) {
+			throw e;
+		    }
+				
+		}
     }
     
     protected static COMMAND userCommand() throws IOException{	
@@ -70,45 +70,45 @@ public class FAA_UI {
     	String cmd = formatInput(input, req);
     	COMMAND retcmd;
     	switch(cmd) {
-    	case "window":		retcmd = COMMAND.WINDOW;
-	    try {
-		windowSize = Integer.parseInt(cmd_extra);
-	    } catch (Exception e) {
-		throw new InvalidCommandException();
-	    }
-	    break;
-    	case "terminate":	retcmd = COMMAND.TERMINATE;
-	    break;
-    	case "connect":		retcmd = COMMAND.CONNECT;
-	    break;
-    	case "disconnect":	retcmd = COMMAND.DISCONNECT;
-	    break;
-	case "get":             retcmd = COMMAND.GET;
-	    break;
-	case "post":		retcmd = COMMAND.POST;
-	    break;
-	default:		retcmd = COMMAND.UNKNOWN;
-	    break;
+	    	case "window":		retcmd = COMMAND.WINDOW;
+		    try {
+			windowSize = Integer.parseInt(cmd_extra);
+		    } catch (Exception e) {
+			throw new InvalidCommandException();
+		    }
+		    	break;
+	    	case "terminate":	retcmd = COMMAND.TERMINATE;
+		    	break;
+	    	case "connect":		retcmd = COMMAND.CONNECT;
+		    	break;
+	    	case "disconnect":	retcmd = COMMAND.DISCONNECT;
+		    	break;
+			case "get":			retcmd = COMMAND.GET;
+			    break;
+			case "post":		retcmd = COMMAND.POST;
+			    break;
+			default:			retcmd = COMMAND.UNKNOWN;
+			    break;
     	}
     	return retcmd;
     }
 
     private static String formatInput(String input, boolean req) {
 	// TODO Auto-generated method stub
-	input = input.replaceAll("(\\s|\\t)+"," ");
-	input = input.trim();
-	String[] format = input.split("\\s");
-	if(!req && format.length > 1) {
-	    cmd_extra = format[1];
-	}
-	return format[0].toLowerCase();
-    }
-	
-    /*
-     * Here are commands
-     * */
-    protected static boolean setWindowSize(int newSize) {
-	return false;
+		input = input.replaceAll("(\\s|\\t)+"," ");
+		input = input.trim();
+		String[] format = input.split("\\s");
+		if(!req && format.length > 1) {
+		    cmd_extra = format[1];
+		}
+		return format[0].toLowerCase();
+	    }
+		
+	    /*
+	     * Here are commands
+	     * */
+	    protected static boolean setWindowSize(int newSize) {
+		return false;
     }
 
 	
@@ -149,12 +149,12 @@ public class FAA_UI {
         	}
     	
     	
-	return true;
+    	return true;
     }
   
     protected static boolean recvFile(String filePath, InputStream in) {
 		
-	return false;
+    	return false;
     }
 	
 }

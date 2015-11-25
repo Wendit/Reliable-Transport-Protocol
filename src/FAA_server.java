@@ -43,87 +43,87 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
      */
     public static void main(String[] args) throws IOException, IllegalArgumentException {
 	// TODO Auto-generated method stub
-	validateInput(args);
-	System.out.println("Server: openning port " + port);
-	ServerSocket server = new ServerSocket(port);
-	//AAPServerSocket server = new AAPServerSocket(port);
-	/*	
-		new Thread(new Runnable(){
-		public void run(){
-		while(userCommand() != COMMAND.TERMINATE) {
-		if(userCommand() == COMMAND.WINDOW) {
-		//setwindowsize; 
+		validateInput(args);
+		System.out.println("Server: openning port " + port);
+		ServerSocket server = new ServerSocket(port);
+		//AAPServerSocket server = new AAPServerSocket(port);
+		/*	
+			new Thread(new Runnable(){
+			public void run(){
+			while(userCommand() != COMMAND.TERMINATE) {
+			if(userCommand() == COMMAND.WINDOW) {
+			//setwindowsize; 
+			}
+			}
+			running = false;
+			}
+			});
+		*/
+			
+		while (running) {
+		    //if(userCommand()
+		   // handleCommands(userCommand(), server);
+		    if(running)
+		    	handleClient(server.accept());
 		}
-		}
-		running = false;
-		}
-		});
-	*/
-		
-	while (running) {
-	    //if(userCommand()
-	   // handleCommands(userCommand(), server);
-	    if(running)
-	    	handleClient(server.accept());
-	}
-	server.close();
+		server.close();
     }
 	
     private static void handleClient(Socket clientSocket) throws IOException {
 	//private static void handleClient(AAPSocket clientSocket) {
-	COMMAND recvcmd;
-	boolean curClient = true;
-	/*
-	  AAPInputStream in = clientSocket.getInputStream();
-	  AAPOutputStream out = clientSocket.getOutputStream();
-	*/
-	InputStream in = clientSocket.getInputStream();
-	OutputStream out = clientSocket.getOutputStream();
-	    
-	/*
-	 * Test purpose
-	 * */
-	SocketAddress clientAddress = clientSocket.getRemoteSocketAddress();
-	System.out.println("Server: Handling client at " + clientAddress);
-	    
-	while ( curClient && (recvcmd = getRequest(in)) != COMMAND.DISCONNECT) {
-	    processRequest(in, out, recvcmd, clientSocket);
-	}
-		
-	System.out.println("Clent close the connection");
-	clientSocket.close();
-	return;
+		COMMAND recvcmd;
+		boolean curClient = true;
+		/*
+		  AAPInputStream in = clientSocket.getInputStream();
+		  AAPOutputStream out = clientSocket.getOutputStream();
+		*/
+		InputStream in = clientSocket.getInputStream();
+		OutputStream out = clientSocket.getOutputStream();
+		    
+		/*
+		 * Test purpose
+		 * */
+		SocketAddress clientAddress = clientSocket.getRemoteSocketAddress();
+		System.out.println("Server: Handling client at " + clientAddress);
+		    
+		while ( curClient && (recvcmd = getRequest(in)) != COMMAND.DISCONNECT) {
+		    processRequest(in, out, recvcmd, clientSocket);
+		}
+			
+		System.out.println("Clent close the connection");
+		clientSocket.close();
+		return;
     }
 
 
     private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) throws IOException {
-	if(recvcmd == COMMAND.CONNECT) {
-	    System.out.println("Handling Client: " + new String(clientSocket.getInetAddress().getAddress()));
-	} else if(recvcmd == COMMAND.GET) {
-	    sendFile(cmd_extra, out);
-	} else if (recvcmd == COMMAND.POST) {
-	    recvFile(cmd_extra, in);
-	}
+		if(recvcmd == COMMAND.CONNECT) {
+		    System.out.println("Handling Client: " + new String(clientSocket.getInetAddress().getAddress()));
+		} else if(recvcmd == COMMAND.GET) {
+		    sendFile(cmd_extra, out);
+		} else if (recvcmd == COMMAND.POST) {
+		    recvFile(cmd_extra, in);
+		}
 
     }
 
     private static COMMAND getRequest(InputStream in) throws IOException {
-	int recvSize = 0;
-	String request = "";
-	if((recvSize = in.read(recvBuff)) != -1) {
-	    request = new String(recvBuff, 0, recvSize);
-	}
-	return processCommand(request, false); // ***********************************
+		int recvSize = 0;
+		String request = "";
+		if((recvSize = in.read(recvBuff)) != -1) {
+		    request = new String(recvBuff, 0, recvSize);
+		}
+		return processCommand(request, false); // ***********************************
     }
 
 
     protected static void handleCommands(COMMAND command, ServerSocket server) {
-	//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
-	if(command == COMMAND.TERMINATE)
-	    running = false;
-	if(command == COMMAND.WINDOW) {
-	    setWindowSize(windowSize);
-	}
+		//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
+		if(command == COMMAND.TERMINATE)
+		    running = false;
+		if(command == COMMAND.WINDOW) {
+		    setWindowSize(windowSize);
+		}
     }
     /*
       @Override
