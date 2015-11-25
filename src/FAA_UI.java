@@ -134,8 +134,14 @@ public class FAA_UI {
     	//file transfer
     		char[] sendBuff = new char[1024];
     		int size = 0;
+    		/*
     		while((size = bufferedReader.read(sendBuff)) > 0 ) {
     			out.write(new String(sendBuff,0,size).getBytes());
+    		}*/
+    		
+    		int c;
+    		while((c = bufferedReader.read()) >=0 ) {
+    			out.write(c);
     		}
     	
     	//ack reciever the end of file transmission

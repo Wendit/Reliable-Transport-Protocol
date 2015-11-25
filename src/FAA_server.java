@@ -98,7 +98,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 
     private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) {
 		if(recvcmd == COMMAND.CONNECT) {
-		    System.out.println("receive connect request from " + new String(clientSocket.getInetAddress().getAddress()));
+		    System.out.println("receive connect request from " + clientSocket.getRemoteSocketAddress());
 		} else if(recvcmd == COMMAND.GET) {
 			System.out.println("receive get request from " + new String(clientSocket.getInetAddress().getAddress()));
 			try {
