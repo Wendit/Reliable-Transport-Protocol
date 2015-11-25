@@ -36,8 +36,8 @@ public class FAA_client extends FAA_UI{
     private static InputStream in;
     private static OutputStream out;
     private static boolean connected = false;
-    private final static String CLIENT_DOWNLOAD_PATH = "client_download/";
-    private final static String CLIENT_UPLOAD_PATH = "client_upload/";
+    private final static String CLIENT_DOWNLOAD_PATH = "downloads/";
+    private final static String FILE_PATH = "test_files/";
 
     public FAA_client() {
 	super(MODE.CLIENT);
@@ -89,11 +89,11 @@ public class FAA_client extends FAA_UI{
 	
     private static boolean get(String fileName) throws IOException {
     	try {
-    	out.write(new String("get").getBytes());
+    	out.write(new String("get " + cmd_extra).getBytes());
     	String response = "";
     	int size = in.read(recvBuff);
     	if(response.equalsIgnoreCase("#ready to transfer#")) {
-    		return recvFile(CLIENT_DOWNLOAD_PATH, in);
+    		return recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
     	}
     	} catch (IOException e) {
     		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
@@ -103,11 +103,11 @@ public class FAA_client extends FAA_UI{
 	
     private static boolean post(String fileName) {
     	try {
-        	out.write(new String("post").getBytes());
+        	out.write(new String("post " + cmd_extra).getBytes());
         	String response = "";
         	int size = in.read(recvBuff);
         	if(response.equalsIgnoreCase("#ready to receive#")) {
-        		return sendFile(CLIENT_UPLOAD_PATH, out);
+        		return sendFile(FILE_PATH + cmd_extra, out);
         	}
         	} catch (IOException e) {
         		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");

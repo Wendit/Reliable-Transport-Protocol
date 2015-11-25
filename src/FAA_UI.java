@@ -117,7 +117,7 @@ public class FAA_UI {
      * */
 	
     protected static boolean sendFile(String filePath, OutputStream out) {
-    	//read the file from server
+    	//read the file from path
     	try{
     		File toSend = new File(filePath);
     		FileReader fileReader = new FileReader(toSend);
@@ -128,7 +128,7 @@ public class FAA_UI {
     		return false;
     	}
     	
-    	//ack client the transmission
+    	//ack receiver the transmission
     	try {
     	out.write(new String("#ready to transfer#").getBytes());
     	} catch(IOException e) {
@@ -140,7 +140,7 @@ public class FAA_UI {
     	//file transfer
     	
     	
-    	//ack the end of file transmission
+    	//ack reciever the end of file transmission
     	try {
         	out.write(new String("#end of transmission#").getBytes());
         	} catch(IOException e) {

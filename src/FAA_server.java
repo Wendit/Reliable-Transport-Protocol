@@ -27,6 +27,9 @@ import java.net.SocketAddress;
  * 
  */
 public class FAA_server extends FAA_UI/* implements Runnable*/{
+	
+	private final static String SERVER_DOWNLOAD_PATH = "uploads/";
+    private final static String FILE_PATH = "test_files/";
 
     //private static boolean running = true;
     public FAA_server() {
