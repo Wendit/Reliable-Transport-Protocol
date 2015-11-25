@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class AAPInputStream {
+	private static final int TIMEOUT = 3000;
 	private static final short MAX_WINDOW_SIZE = Short.MAX_VALUE;
 	private String remoteSocketAddress;
 	private int remoteSocketPort;
@@ -34,6 +35,7 @@ public class AAPInputStream {
 	public AAPInputStream(int port,int initSeqNum, String remoteSocketAddress, int remoteSocketPort)
 			throws UnknownHostException, SocketException  {
 		recvSocket = new DatagramSocket(port);
+		recvSocket.setSoTimeout(TIMEOUT);
 		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.lastAckNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.remoteSocketAddress = remoteSocketAddress;
@@ -87,30 +89,6 @@ public class AAPInputStream {
 		return bytesRead;
 	}
 	
-	private boolean checkError(DatagramPacket recvPacket) throws IOException{
-		boolean corrupted = false;
-		boolean errorOccurs = false;
-		try{
-			 recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-		 }catch(FlagNotFoundException e){
-			 DebugUtils.debugPrint(e.getMessage());
-		 }catch(PacketCorruptedException e){
-			 corrupted = true;
-			 DebugUtils.debugPrint(e.getMessage());
-		 }
-		 if(corrupted)
-			 errorOccurs = true;
-		 else if(recvAAPPacket.getSeqNum() != lastAckNum){
-					 errorOccurs = true;
-				 }
-		//If no errors, put payload into our buffer and change the remaining window size
-		 else{
-			 streamBuffer.put(recvAAPPacket.getPayload());
-			 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
-		 }
-		 return errorOccurs;	 
-	}
-	
 	private void sendAckBack() throws UnknownHostException, IOException{
 		//error checking
 		//Drop everything except the packet which is not corrupted and is expected
@@ -135,5 +113,29 @@ public class AAPInputStream {
 		 }		 
 		 // Sending ack back
 		 recvSocket.send(ackPacket);
+	}
+	
+	private boolean checkError(DatagramPacket recvPacket) throws IOException{
+		boolean corrupted = false;
+		boolean errorOccurs = false;
+		try{
+			 recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+		 }catch(FlagNotFoundException e){
+			 DebugUtils.debugPrint(e.getMessage());
+		 }catch(PacketCorruptedException e){
+			 corrupted = true;
+			 DebugUtils.debugPrint(e.getMessage());
+		 }
+		 if(corrupted)
+			 errorOccurs = true;
+		 else if(recvAAPPacket.getSeqNum() != lastAckNum){
+					 errorOccurs = true;
+				 }
+		//If no errors, put payload into our buffer and change the remaining window size
+		 else{
+			 streamBuffer.put(recvAAPPacket.getPayload());
+			 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
+		 }
+		 return errorOccurs;	 
 	}
 }

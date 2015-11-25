@@ -17,6 +17,9 @@ public class AAPOutputStream {
 	private DatagramPacket recvPacket;
 	private AAPPacket sendAAPacket;
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
+	private static final int TIMEOUT = 3000;
+	private static final int MAX_TRY = 10;
+	private int currentTries;
 	private LinkedList<AAPPacket> packetsList; 
 	private LinkedList<AAPPacket> packetWindow;
 	private short currentWindowSize = 10;
@@ -31,6 +34,7 @@ public class AAPOutputStream {
 	public AAPOutputStream(int port,int initSeqNum, String recverAddress, int recverPort)
 			throws UnknownHostException, SocketException  {
 		sendSocket = new DatagramSocket(port);
+		sendSocket.setSoTimeout(TIMEOUT);
 		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.recverAddress = recverAddress;
 		this.recverPort = recverPort;
@@ -39,19 +43,20 @@ public class AAPOutputStream {
 		this.currentWindowSize = MAX_WINDOW_SIZE;
 		this.recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		this.lastAcked = -1;
+		this.currentTries = MAX_TRY;
 		
 	}
 	
-	public void write(byte b) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
+	public void write(byte b) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException{
 		byte[] temp = {b};
 		send(temp);
 	}
 	
-	public void write(byte[] bArray) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
+	public void write(byte[] bArray) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException{
 		send(bArray);
 	}
 	
-	public void write(byte[] b, int off, int len) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
+	public void write(byte[] b, int off, int len) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException{
 		byte[] temp = Arrays.copyOfRange(b, off, off+len);
 		send(temp);
 	}
@@ -60,12 +65,12 @@ public class AAPOutputStream {
 		sendSocket.close();
 	}
 	
-	private void send(byte[] b) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
+	private void send(byte[] b) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException{
 		putPacketInQueue(b);
 		sendPackets();	
 	}
 	
-	private void sendPackets() throws IOException{	  
+	private void sendPackets() throws IOException, ServerNotRespondingException{	  
 	  fillWindow();//Automatically sends the packets added
 	  lastAcked = packetWindow.getFirst().getSeqNum();
 	  while(packetsList.size() != 0 || packetWindow.size() != 0){
@@ -77,31 +82,46 @@ public class AAPOutputStream {
 	  //Then if a an ack if recieved, discad head and add new packet(if any)
 	}
 	
-	private void putPacketInQueue(byte[] b) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
+	private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLargeException{
 		
 		int byteLeft = b.length;
 		int currentPos = 0;
 		while(byteLeft - AAPPacket.MAX_PAYLOAD_SIZE >0){
-			sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
-					(short)0, Arrays.copyOfRange(b, currentPos, currentPos+AAPPacket.MAX_PAYLOAD_SIZE)); 
+			try{
+				sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
+					(short)0, Arrays.copyOfRange(b, currentPos, currentPos+AAPPacket.MAX_PAYLOAD_SIZE));
+			}catch(FlagNotFoundException e){
+				e.printStackTrace();
+				break;
+			}
 			currentPos = currentPos+AAPPacket.MAX_PAYLOAD_SIZE;
 			packetsList.add(sendAAPacket);
 			currentSeqNum = AAPUtils.incrementSeqNum(currentSeqNum);
 		}
-		sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
+		try{
+			sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
 				(short)0, Arrays.copyOfRange(b, currentPos, currentPos+AAPPacket.MAX_PAYLOAD_SIZE));
+		}catch (FlagNotFoundException e){
+					e.printStackTrace();
+				}
 		packetsList.add(sendAAPacket);
 		currentSeqNum = AAPUtils.incrementSeqNum(currentSeqNum);
 	}
 	
-	private void recvAckAndFillWindow() throws IOException{	
+	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException{	
 		AAPPacket recvAAPPacket;
 		while(true){		
 			try {
 				sendSocket.receive(recvPacket);
 			} catch (InterruptedIOException e) {
+				currentTries--;
+				//Reset the connection if the server is not responding
+				if(currentTries == 0){
+					throw new ServerNotRespondingException("Server not responding. Connection abort. Please reset connection.");
+				}
 				break;//break if times out
 			}
+			currentTries = MAX_TRY;
 			
 			try{
 				//Drop the packet if it was bad
