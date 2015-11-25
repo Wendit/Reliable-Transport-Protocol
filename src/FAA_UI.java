@@ -116,13 +116,40 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static boolean sendFile(String filePath, OutputStream out) throws FileNotFoundException {
-	File toSend = new File(filePath);
-	FileReader fileReader = new FileReader(toSend);
-	BufferedReader bufferedReader = new BufferedReader(fileReader);
-	    
-	
-	return false;
+    protected static boolean sendFile(String filePath, OutputStream out) {
+    	//read the file from server
+    	try{
+    		File toSend = new File(filePath);
+    		FileReader fileReader = new FileReader(toSend);
+    		BufferedReader bufferedReader = new BufferedReader(fileReader);
+    		
+    	} catch(FileNotFoundException e) {
+    		System.out.println(e.getMessage() + " Please re-try.");
+    		return false;
+    	}
+    	
+    	//ack client the transmission
+    	try {
+    	out.write(new String("ready to transfer").getBytes());
+    	} catch(IOException e) {
+    		System.out.println("error detected while trying to transfer file: " + e.getMessage());
+    		return false;
+    	}
+    	
+    	
+    	//file transfer
+    	
+    	
+    	//ack the end of file transmission
+    	try {
+        	out.write(new String("#end of transmission#").getBytes());
+        	} catch(IOException e) {
+        		System.out.println("error detected while trying to transfer file: " + e.getMessage());
+        		return false;
+        	}
+    	
+    	
+	return true;
     }
   
     protected static boolean recvFile(String filePath, InputStream in) {

@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -35,6 +36,8 @@ public class FAA_client extends FAA_UI{
     private static InputStream in;
     private static OutputStream out;
     private static boolean connected = false;
+    private final static String CLIENT_DOWNLOAD_PATH = "client_download/";
+    private final static String CLIENT_UPLOAD_PATH = "client_upload/";
 
     public FAA_client() {
 	super(MODE.CLIENT);
@@ -47,7 +50,7 @@ public class FAA_client extends FAA_UI{
     public static void main(String[] args) throws IOException {
 
 	validateInput(args);
-		
+	
 	/*
 	  AAPSocket client = new AAPSocket(emu_addr, emu_port);
 	  AAPInputStream in = client.getInputStream();
@@ -71,9 +74,9 @@ public class FAA_client extends FAA_UI{
 	if(command == COMMAND.CONNECT && !connected) {
 	    connect();
 	} else if (command == COMMAND.GET && connected) {
-	    get("");
+	    get(cmd_extra);
 	} else if (command == COMMAND.POST  && connected) {
-	    post("");
+	    post(cmd_extra);
 	} else if (command == COMMAND.UNKNOWN  && connected){
 	    System.out.println("Invalid command input, please retry");
 	} else if(command == COMMAND.DISCONNECT  && connected){
@@ -82,8 +85,17 @@ public class FAA_client extends FAA_UI{
     }
 	
 	
-    private static boolean get(String fileName) {
-		
+    private static boolean get(String fileName) throws IOException {
+    	try {
+    	out.write(new String("get").getBytes());
+    	String response = "";
+    	int size = in.read(recvBuff);
+    	if(response.equalsIgnoreCase("ready to transfer")) {
+    		recvFile(CLIENT_DOWNLOAD_PATH, in);
+    	}
+    	} catch (IOException e) {
+    		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
+    	}
 	return false;
     }
 	
@@ -94,10 +106,20 @@ public class FAA_client extends FAA_UI{
 
     private static void connect() throws UnknownHostException, IOException {
 	try {
+		
     client = new Socket(emu_addr, emu_port);
 	in = client.getInputStream();
 	out = client.getOutputStream();
-	//client.bind(port);	    
+	
+		/*
+		//client = new Socket();
+		//client.bind(new InetSocketAddress(emu_addr, port));
+		
+		System.out.println("bind to local host: "  + " port: " + client.getLocalPort());
+		client.connect(new InetSocketAddress(emu_addr, emu_port));
+		in = client.getInputStream();
+		out = client.getOutputStream();
+		*/
 	out.write(new String("connect").getBytes());
 	connected = true;
 	} catch(Exception e) {

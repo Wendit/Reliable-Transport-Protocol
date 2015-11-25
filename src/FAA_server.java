@@ -59,7 +59,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		
 	while (running) {
 	    //if(userCommand()
-	    handleCommands(userCommand(), server);
+	   // handleCommands(userCommand(), server);
 	    if(running)
 	    	handleClient(server.accept());
 	}
