@@ -1,13 +1,16 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Scanner;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 
 
 public class FAA_UI {
@@ -118,33 +121,36 @@ public class FAA_UI {
 	
     protected static boolean sendFile(String filePath, OutputStream out) {
     	//read the file from path
+    	
     	try{
+    	//	Path path = new Path(filePath);
     		File toSend = new File(filePath);
     		FileReader fileReader = new FileReader(toSend);
     		BufferedReader bufferedReader = new BufferedReader(fileReader);
     		
-    	} catch(FileNotFoundException e) {
-    		System.out.println(e.getMessage() + " Please re-try.");
-    		return false;
-    	}
+    	
     	
     	//ack receiver the transmission
+    	/*
     	try {
     	out.write(new String("#ready to transfer#").getBytes());
     	} catch(IOException e) {
     		System.out.println("error detected while trying to transfer file: " + e.getMessage());
     		return false;
-    	}
+    	}*/
     	
     	
     	//file transfer
+    		String output = "";
+    		while((output = bufferedReader.readLine()) != null) {
+    			out.write(output.getBytes());
+    		}
     	
     	
     	//ack reciever the end of file transmission
-    	try {
         	out.write(new String("#end of transmission#").getBytes());
-        	} catch(IOException e) {
-        		System.out.println("error detected while trying to transfer file: " + e.getMessage());
+        	} catch(Exception e) {
+        		System.out.println(e.getMessage() + " Please re-try.");
         		return false;
         	}
     	
@@ -152,8 +158,28 @@ public class FAA_UI {
     	return true;
     }
   
-    protected static boolean recvFile(String filePath, InputStream in) {
-		
+    protected static boolean recvFile(String filePath, InputStream in, OutputStream out) {
+    	//File toRecv;
+    	//BufferedWriter bufferwriter;
+    	try{
+    		File toRecv = new File(filePath);
+    		FileWriter fileWriter = new FileWriter(toRecv);
+    		BufferedWriter bufferwriter= new BufferedWriter(fileWriter);
+    	
+	    	String response = "";
+	    	int size = in.read(recvBuff);
+	    	response = new String(recvBuff, 0, size);
+	    	while(!response.equalsIgnoreCase("#end of transmission#")) {
+	    		bufferwriter.write(response,0,size);
+	    		size = in.read(recvBuff);
+	    		response = new String(recvBuff, 0, size);
+	    	}
+
+    	} catch(Exception e) {
+    		System.out.println(e.getMessage() + " Please re-try.");
+    		return false;
+    	}
+    	
     	return false;
     }
 	
