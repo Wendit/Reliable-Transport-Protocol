@@ -1,17 +1,17 @@
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 public class AAPSocket {
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
 	private static final int TIMEOUT = 3000;
 	private static final int MAX_TRY = 10;
 	private String remoteSocketAddress;
+	DatagramSocket socket;
 	private int remoteSocketPort;
 	private int localBindPort;
 	private AAPInputStream inputStream;
@@ -20,17 +20,42 @@ public class AAPSocket {
 	
 	/**
 	 * Default constructor
-	 * @throws SocketException 
-	 * @throws UnknownHostException 
+	 * @throws ServerNotRespondingException 
+	 * @throws PayLoadSizeTooLargeException 
+	 * @throws IOException 
+	 * @throws FlagNotFoundException 
 	 */
-	public AAPSocket(String remoteSocketAddress,int remoteSocketPort, int localBindPort) throws UnknownHostException, SocketException{
+	public AAPSocket(String remoteSocketAddress,int remoteSocketPort, int localBindPort) throws IOException, ServerNotRespondingException{
 		this.remoteSocketAddress = remoteSocketAddress;
 		this.remoteSocketPort = remoteSocketPort;
 		this.localBindPort = localBindPort;
-		this.inputStream = new AAPInputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
-		this.outputStream = new AAPOutputStream(localBindPort,0, remoteSocketAddress, remoteSocketPort);
-		
+		this.socket = new DatagramSocket(localBindPort);
+		this.socket.setSoTimeout(TIMEOUT);
 		//Three way handshake here
+		threeWayHandShake(remoteSocketAddress,remoteSocketPort);
+	}
+	
+	/**
+	 * Server accept constructor
+	 * @param remoteSocketAddress
+	 * @param remoteSocketPort
+	 * @param localBindPort
+	 * @throws IOException
+	 * @throws PayLoadSizeTooLargeException
+	 * @throws ServerNotRespondingException
+	 */
+	public AAPSocket(String remoteSocketAddress,int remoteSocketPort, int localBindPort, boolean fromServerAccept) throws IOException,ServerNotRespondingException{
+		this.remoteSocketAddress = remoteSocketAddress;
+		this.remoteSocketPort = remoteSocketPort;
+		this.localBindPort = localBindPort;
+		this.socket = new DatagramSocket(localBindPort);
+		this.socket.setSoTimeout(TIMEOUT);
+		if(fromServerAccept){
+			this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		}else{
+			threeWayHandShake(remoteSocketAddress,remoteSocketPort);
+		}
 	}
 	
 	public AAPInputStream getInputStream(){
@@ -41,43 +66,106 @@ public class AAPSocket {
 		return outputStream;
 	}
 	
-	public void close(){
-		inputStream.close();
-		outputStream.close();
+	public void close() throws UnknownHostException, IOException{
+		AAPPacket sendAAPacket;
+		AAPPacket recvAAPPacket;
+		DatagramPacket recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
+		int currentTry = MAX_TRY;
+		while(currentTry != 0){
+			try {
+				sendAAPacket = new AAPPacket(0, 0, AAPPacket.FIN_FLAG,
+						(short)0, "FIN".getBytes());
+				socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
+						  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+				try{
+					socket.receive(recvPacket);
+					recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+					if(recvAAPPacket.getFlags() == AAPPacket.FIN_ACK_FLAG || recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
+						if(recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
+							sendAAPacket = new AAPPacket(0, 0, AAPPacket.FIN_ACK_FLAG,
+									(short)0, "FIN_ACK_FLAG".getBytes());
+							socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
+									  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+						}else{
+							sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
+									(short)0, "ACK".getBytes());
+							socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
+									  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+							socket.close();
+							return;
+						}
+					}else{
+						currentTry--;
+					}
+				}catch(InterruptedIOException e){
+					currentTry--;
+				} catch (PacketCorruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} catch (FlagNotFoundException | PayLoadSizeTooLargeException e) {
+				e.printStackTrace();
+			}		
+		}
+		socket.close();
+		return;
 	}
 	
 	public InetAddress getRemoteSocketAddress() throws UnknownHostException{
 		return InetAddress.getByName(remoteSocketAddress);
 	}
 	
-	public void threeWayHandShake(String remoteSocketAddress,int remoteSocketPort) throws FlagNotFoundException, IOException, PayLoadSizeTooLargeException{
-		DatagramSocket socket = new DatagramSocket();
+	private void threeWayHandShake(String remoteSocketAddress,int remoteSocketPort) throws IOException, ServerNotRespondingException{
+
 		DatagramPacket recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		AAPPacket recvAAPPacket;
 	    AAPPacket sendAAPacket;
-	    socket.setSoTimeout(TIMEOUT);
+	    
 	    int tries = MAX_TRY;
 
-	    while(tries >0){
-	    	sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
-					(short)0, "SYN".getBytes());
-	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-	    	socket.receive(recvPacket);
+	    while(true){	    	
+	    	try {
+	    		//Send SYN
+				sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
+						(short)0, "SYN".getBytes());
+		    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
+						  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+			} catch (PayLoadSizeTooLargeException e) {
+				e.printStackTrace();
+			}catch (FlagNotFoundException e){
+				e.printStackTrace();
+			}
 	    	try{
+	    		//Receive ACK
+	    		socket.receive(recvPacket);
+	    	}catch(InterruptedIOException e){
+	    		tries--;
+	    		if(tries == 0){
+	    			throw new ServerNotRespondingException("Remote not responding. Three way handshake  failed.");
+	    		}
+	    	}
+	    	
+	    	try{
+	    		//Extract ACK
 	    		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
 	    		if(recvAAPPacket.getFlags() == AAPPacket.SYN_ACK_FLAG){
-	    			sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
-	    					(short)0, "SYN".getBytes());
+	    			sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
+	    					(short)0, "ACK".getBytes());
 	    	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
 	    					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+	    	    	
+	    	    	this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+	    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+	    			break;
 	    		}
+	    		
 	    	}catch(FlagNotFoundException e){
 				 DebugUtils.debugPrint(e.getMessage());
 			 }catch(PacketCorruptedException e){
 				 DebugUtils.debugPrint(e.getMessage());
+			 }catch(PayLoadSizeTooLargeException e){
+				 DebugUtils.debugPrint(e.getMessage());
 			 }
 	    }
-	    
 	}
 }
