@@ -87,19 +87,20 @@ public class FAA_client extends FAA_UI{
     }
 	
 	
-    private static boolean get(String fileName) throws IOException {
+    private static boolean get(String fileName) {
     	try {
 	    	out.write(new String("get " + cmd_extra).getBytes());
 	    	String response = "";
 	    	int size = in.read(recvBuff);
 	    	response = new String(recvBuff, 0, size);
 	    	if(response.equalsIgnoreCase("#ready to transfer#")) {
-	    		return recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
+	    		recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
 	    	}
-	    	} catch (IOException e) {
+	    } catch (Exception e) {
 	    		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
+	    		return false;
 	    	}
-    	return false;
+    	return true;
     }
 	
     private static boolean post(String fileName) {
@@ -109,12 +110,13 @@ public class FAA_client extends FAA_UI{
         	int size = in.read(recvBuff);
         	response = new String(recvBuff, 0, size);
         	if(response.equalsIgnoreCase("#ready to receive#")) {
-        		return sendFile(FILE_PATH + cmd_extra, out);
+        		sendFile(FILE_PATH + cmd_extra, out);
         	}
         	} catch (IOException e) {
         		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
+        		return false;
         	}
-    	return false;
+    	return true;
     }
 
     private static void connect() throws UnknownHostException, IOException {

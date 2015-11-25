@@ -1,13 +1,16 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Scanner;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 
 
 public class FAA_UI {
@@ -116,45 +119,67 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static boolean sendFile(String filePath, OutputStream out) {
+    protected static void sendFile(String filePath, OutputStream out) throws IOException {
     	//read the file from path
-    	try{
+    
+    	//	Path path = new Path(filePath);
     		File toSend = new File(filePath);
     		FileReader fileReader = new FileReader(toSend);
     		BufferedReader bufferedReader = new BufferedReader(fileReader);
-    		
-    	} catch(FileNotFoundException e) {
-    		System.out.println(e.getMessage() + " Please re-try.");
-    		return false;
-    	}
-    	
+
+    		try {
     	//ack receiver the transmission
-    	try {
-    	out.write(new String("#ready to transfer#").getBytes());
-    	} catch(IOException e) {
-    		System.out.println("error detected while trying to transfer file: " + e.getMessage());
-    		return false;
-    	}
-    	
+    	//	out.write(new String("#ready to transfer#").getBytes());
     	
     	//file transfer
-    	
+    		char[] sendBuff = new char[1024];
+    		int size = 0;
+    		/*
+    		while((size = bufferedReader.read(sendBuff)) > 0 ) {
+    			out.write(new String(sendBuff,0,size).getBytes());
+    		}*/
+    		
+    		int c;
+    		while((c = bufferedReader.read()) >=0 ) {
+    			out.write(c);
+    		}
     	
     	//ack reciever the end of file transmission
-    	try {
         	out.write(new String("#end of transmission#").getBytes());
-        	} catch(IOException e) {
-        		System.out.println("error detected while trying to transfer file: " + e.getMessage());
-        		return false;
-        	}
-    	
-    	
-    	return true;
+    	} catch (IOException e) {
+    		bufferedReader.close();
+    		throw e;
+    	}
+        	bufferedReader.close();
     }
   
-    protected static boolean recvFile(String filePath, InputStream in) {
-		
-    	return false;
+    protected static void recvFile(String filePath, InputStream in) throws IOException, FileTransferException {
+    	//File toRecv;
+    	//BufferedWriter bufferwriter;
+   
+    		File toRecv = new File(filePath);
+    		FileWriter fileWriter = new FileWriter(toRecv);
+    		BufferedWriter bufferwriter= new BufferedWriter(fileWriter);
+    		try {
+	    	//	out.write(new String("#ready to receive#").getBytes());
+		    	String response = "";
+		    	int size = in.read(recvBuff);
+		    	response = new String(recvBuff, 0, size);
+		    	while(!response.equalsIgnoreCase("#end of transmission#")) {
+		    		if(response.equalsIgnoreCase("#discard#")) {
+		    			toRecv.delete();
+		    			bufferwriter.close();
+		    			throw new FileTransferException();
+		    		}
+		    		bufferwriter.write(response,0,size);
+		    		size = in.read(recvBuff);
+		    		response = new String(recvBuff, 0, size);
+		    	}
+    		} catch(IOException e) {
+    			bufferwriter.close();
+    			throw e;
+    		}
+	    bufferwriter.close();
     }
 	
 }

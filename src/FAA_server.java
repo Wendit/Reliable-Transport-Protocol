@@ -96,17 +96,44 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     }
 
 
-    private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) throws IOException {
+    private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) {
 		if(recvcmd == COMMAND.CONNECT) {
-		    System.out.println("Handling Client: " + new String(clientSocket.getInetAddress().getAddress()));
+		    System.out.println("receive connect request from " + clientSocket.getRemoteSocketAddress());
 		} else if(recvcmd == COMMAND.GET) {
-		    sendFile(cmd_extra, out);
+			System.out.println("receive get request from " + new String(clientSocket.getInetAddress().getAddress()));
+			try {
+				if(handleGet(out)) {
+					System.out.println("Sending file successfully.");
+				} else {
+					System.out.println("Sending file failed.");
+				}
+			} catch(IOException e) {
+				System.out.println("Connection issue: " + e.getMessage());
+			}
 		} else if (recvcmd == COMMAND.POST) {
-		    recvFile(cmd_extra, in);
+			System.out.println("receive post request from " + new String(clientSocket.getInetAddress().getAddress()));
+		    //recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
 		}
 
     }
+    
+    private static boolean handleGet(OutputStream out) throws IOException {
+    	try {
+	    	out.write(new String("#ready to transfer#").getBytes());
+	    	System.out.println("recieve get" + cmd_extra + "request");
+	    	sendFile(FILE_PATH + cmd_extra, out);
+    	} catch (IOException e) {
+	    	out.write(new String("#discard#").getBytes());
+	    	return false;
+    	}
+    		return true;
+    }
 
+    private static boolean handlePost(InputStream in) throws IOException {
+    	//recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
+    	
+    	return true;
+    }
     private static COMMAND getRequest(InputStream in) throws IOException {
 		int recvSize = 0;
 		String request = "";
