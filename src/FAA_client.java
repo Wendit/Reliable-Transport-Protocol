@@ -99,9 +99,13 @@ public class FAA_client extends FAA_UI{
 	    	int size = 0;
 	    	//************************************
 	    //	int size = in.read(recvBuff);
-	    	while((size = in.read(recvBuff)) <= 0){}
+	    //	while((size = in.read(recvBuff)) <= 0){}
+	    	if ((size = waitUntilRead(in)) == -1) {
+	    		return false;
+	    	}
 	    	response = new String(recvBuff, 0, size);
 	    	if(response.equalsIgnoreCase("#ready to transfer#")) {
+	    		System.out.println("start receiving from server");
 	    		recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
 	    	}
 	    } catch (Exception e) {
@@ -119,7 +123,10 @@ public class FAA_client extends FAA_UI{
         	int size = 0;
         	//***********************************************
         	//size = in.read(recvBuff);
-        	while((size = in.read(recvBuff)) <= 0) {}
+        	//while((size = in.read(recvBuff)) <= 0) {}
+        	if ((size = waitUntilRead(in)) == -1) {
+	    		return false;
+	    	}
         	response = new String(recvBuff, 0, size);
         	if(response.equalsIgnoreCase("#ready to receive#")) {
         		sendFile(FILE_PATH + cmd_extra, out);
@@ -147,6 +154,7 @@ public class FAA_client extends FAA_UI{
 			in = client.getInputStream();
 			out = client.getOutputStream();
 			*/
+		Thread.sleep(1000);
 		out.write(new String("connect").getBytes());
 		connected = true;
 	} catch(Exception e) {
@@ -155,7 +163,7 @@ public class FAA_client extends FAA_UI{
 	//	return true;
     }
 	
-    private static void disconnect() throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
+    private static void disconnect() throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException {
  		out.write(new String("disconnect").getBytes());
  		client.close();
  		connected = false;

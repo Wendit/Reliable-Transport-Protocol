@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class AAPEchoClient {
 	static byte[] data;
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, InterruptedException {
 
     if ((args.length < 2) || (args.length > 3))  // Test for correct # of args
       throw new IllegalArgumentException("Parameter(s): <Server> <Word> [<Port>]");

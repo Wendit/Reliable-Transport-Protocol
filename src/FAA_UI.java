@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public class FAA_UI {
 
-	protected final static int BUF_SIZE = 256;
+	protected final static int BUF_SIZE = 1024;
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
@@ -115,7 +115,7 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static void sendFile(String filePath, AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
+    protected static void sendFile(String filePath, AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException {
     	
     	//read the file from path	
     		File toSend = new File(filePath);
@@ -161,7 +161,12 @@ public class FAA_UI {
 		    	String response = "";
 		    	int size = 0;
 
-		    	size = in.read(recvBuff);
+//		    	size = in.read(recvBuff);
+		    	//***************************************
+		    	if ((size = waitUntilRead(in)) == -1) {
+		    		fos.close();
+		    		return;
+		    	}
 		    	response = new String(recvBuff, 0, size);
 		      while(!response.equalsIgnoreCase("#end of transmission#")) {
 		    		if(response.contains("#discard#")) {
@@ -171,6 +176,11 @@ public class FAA_UI {
 		    		}
 		    		fos.write(recvBuff, 0, size);
 		    		System.out.println("successful wrote into file.");
+		    		//**************************************
+		    		if ((size = waitUntilRead(in)) == -1) {
+		    			fos.close();
+			    		return;
+			    	}
 		    		size = in.read(recvBuff);
 		    		System.out.println("new size " + size);
 		    		response = new String(recvBuff, 0, size);
@@ -184,11 +194,11 @@ public class FAA_UI {
 	    fos.close();
     }
     
-    protected int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+    protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
     	int size = 0;
     	while((size = in.read(recvBuff)) <= 0) {
     		if(size == -1) {
-    			//throw
+    			break;
     		}
     	}
     	return size;
