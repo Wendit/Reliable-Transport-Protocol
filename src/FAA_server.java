@@ -111,7 +111,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 
     private static void processRequest(AAPInputStream in, AAPOutputStream out, COMMAND recvcmd, AAPSocket clientSocket) {
 		if(recvcmd == COMMAND.CONNECT) {
-		   // System.out.println("receive connect request from " + clientSocket.getRemoteSocketAddress());
+		    System.out.println("receive connect request********************************");
 		} else if(recvcmd == COMMAND.GET) {
 			//System.out.println("receive get request from " + new String(clientSocket.getRemoteSocketAddress().getAddress()));
 			try {
@@ -165,9 +165,13 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		int recvSize = 0;
 		String request = "";
 		System.out.println("waiting for request.");
-		if((recvSize = in.read(recvBuff)) != -1) {
-		    request = new String(recvBuff, 0, recvSize);
+		//****************************************************
+		//if((recvSize = in.read(recvBuff)) > -1) {
+		while((recvSize = in.read(recvBuff)) <= 0) {
+			
 		}
+	    request = new String(recvBuff, 0, recvSize);
+
 		System.out.println("get request " + request);
 		return processCommand(request, false); // ***********************************
     }

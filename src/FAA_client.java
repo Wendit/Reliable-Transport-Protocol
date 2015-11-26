@@ -96,7 +96,10 @@ public class FAA_client extends FAA_UI{
     	try {
 	    	out.write(new String("get " + cmd_extra).getBytes());
 	    	String response = "";
-	    	int size = in.read(recvBuff);
+	    	int size = 0;
+	    	//************************************
+	    //	int size = in.read(recvBuff);
+	    	while((size = in.read(recvBuff)) <= 0){}
 	    	response = new String(recvBuff, 0, size);
 	    	if(response.equalsIgnoreCase("#ready to transfer#")) {
 	    		recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
@@ -112,7 +115,11 @@ public class FAA_client extends FAA_UI{
     	try {
         	out.write(new String("post " + cmd_extra).getBytes());
         	String response = "";
-        	int size = in.read(recvBuff);
+        	
+        	int size = 0;
+        	//***********************************************
+        	//size = in.read(recvBuff);
+        	while((size = in.read(recvBuff)) <= 0) {}
         	response = new String(recvBuff, 0, size);
         	if(response.equalsIgnoreCase("#ready to receive#")) {
         		sendFile(FILE_PATH + cmd_extra, out);
