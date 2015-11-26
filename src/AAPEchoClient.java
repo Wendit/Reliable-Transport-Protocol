@@ -1,5 +1,6 @@
 
 import java.net.SocketException;
+import java.util.Arrays;
 import java.io.IOException;
 
 
@@ -14,7 +15,9 @@ public class AAPEchoClient {
     String server = args[0];       // Server name or IP address
     // Convert argument String to bytes using the default character encoding
 
-     data = args[1].getBytes();
+     //data = args[1].getBytes();
+    data = new byte[400];
+    Arrays.fill(data, (byte)200);
     int servPort = (args.length == 3) ? Integer.parseInt(args[2]) : 7;
 
     // Create socket that is connected to server on specified port

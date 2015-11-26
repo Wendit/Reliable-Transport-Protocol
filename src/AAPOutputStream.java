@@ -81,7 +81,7 @@ public class AAPOutputStream {
 	  while(currentConnectionTries != 0 &&(packetsList.size() != 0 || packetWindow.size() != 0)){
 		  try{
 			  recvAckAndFillWindow();
-			  //if ackRecieve times out send all packets again if the window is not empty 
+			  //if ackRecieve times out send all packets again if the window is not empty
 			  if(packetWindow.size() !=0 && lastAcked == packetWindow.getFirst().getSeqNum())
 				  sendPacketInWindow(packetWindow.size());
 		  }catch(ServerNotRespondingException e){
@@ -201,7 +201,8 @@ private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLarge
 		while(byteLeft - AAPPacket.MAX_PAYLOAD_SIZE >0){
 			try{
 				sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
-					(short)0, b);
+					(short)0, Arrays.copyOfRange(b,currentPos, currentPos + AAPPacket.MAX_PAYLOAD_SIZE));
+				byteLeft -= AAPPacket.MAX_PAYLOAD_SIZE;
 			}catch(FlagNotFoundException e){
 				e.printStackTrace();
 				break;
@@ -212,7 +213,7 @@ private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLarge
 		}
 		try{
 			sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.END_OF_PACKET_FLAG,
-				(short)0, b);
+				(short)0, Arrays.copyOfRange(b,currentPos, currentPos + byteLeft));
 		}catch (FlagNotFoundException e){
 					e.printStackTrace();
 				}

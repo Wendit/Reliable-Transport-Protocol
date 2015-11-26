@@ -5,7 +5,7 @@ public class AAPEchoServer {
 	static byte[] receiveBuf;
   private static final int BUFSIZE = 32;   // Size of receive buffer
 
-	  public static void main(String[] args) throws IOException {
+	  public static void main(String[] args) throws IOException, ServerNotRespondingException {
 	
 	    if (args.length != 1)  // Test for correct # of args
 	      throw new IllegalArgumentException("Parameter(s): <Port>");
@@ -17,30 +17,35 @@ public class AAPEchoServer {
 	
 	    int recvMsgSize;   // Size of received message
 	    receiveBuf = new byte[BUFSIZE];  // Receive buffer
-	
+	    AAPSocket clntSock;
 		    while (true) { // Run forever, accepting and servicing connections
-		        try{
-				      AAPSocket clntSock = servSock.accept();     // Get client connection
+		      
+				      clntSock = servSock.accept();     // Get client connection
 				      receiveBuf = new byte[BUFSIZE];  // Receive buffer
-				
-				      String clientAddress = clntSock.getRemoteSocketAddress().toString();
-				      System.out.println("Handling client at " + clientAddress);
-				      
-				      AAPInputStream in = clntSock.getInputStream();
-				      AAPOutputStream out = clntSock.getOutputStream();
-				
-				      // Receive until client closes connection, indicated by -1 return
-				      
-				      recvMsgSize = waitUntilRead(in);
-				      out.write(receiveBuf, 0, recvMsgSize);
-				      
-				      if(!clntSock.socket.isClosed()){
-				    	  DebugUtils.debugPrint("Close the socket for current user ");
-				    	  clntSock.close();  // Close the socket.  We are done with this client!
+				      try{
+					      String clientAddress = clntSock.getRemoteSocketAddress().toString();
+					      System.out.println("Handling client at " + clientAddress);
+					      
+					      AAPInputStream in = clntSock.getInputStream();
+					      AAPOutputStream out = clntSock.getOutputStream();
+					
+					      // Receive until client closes connection, indicated by -1 return
+					      
+					      recvMsgSize = waitUntilRead(in);
+					      if(recvMsgSize != -1)
+					      out.write(receiveBuf, 0, recvMsgSize);
+					      
+					      if(!clntSock.socket.isClosed()){
+					    	  DebugUtils.debugPrint("Close the socket for current user ");
+					    	  clntSock.close();  // Close the socket.  We are done with this client!
 				      }
 		  	  }catch(Exception e){
 				  e.printStackTrace();
-			  }
+				  if(!clntSock.socket.isClosed()){
+			    	  DebugUtils.debugPrint("Close the socket for current user ");
+			    	  clntSock.close();  // Close the socket.  We are done with this client!
+				  }
+		  	  }
 		    }
 		    /* NOT REACHED */
 
