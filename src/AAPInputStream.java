@@ -49,13 +49,25 @@ public class AAPInputStream {
 		this.currentTries = MAX_TRY;
 	}
 	
-	public Byte read() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
-		receive();
+	public Byte read() throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
+		try{
+			receive();
+		}catch(SocketException e){
+			e.printStackTrace();
+			return -1;
+		}
+		
 		return streamBuffer.getByte();
 	}
 	
-	public int read(byte[] recvBuffer) throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
-		receive();
+	public int read(byte[] recvBuffer) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
+		try{
+			receive();
+		}catch(SocketException e){
+			e.printStackTrace();
+			return -1;
+		}
+		
 		Byte temp;
 		for(int i = 0; i < recvBuffer.length; i++){
 			if((temp =  streamBuffer.getByte()) != null){
@@ -65,8 +77,14 @@ public class AAPInputStream {
 		return Math.min(recvBuffer.length, streamBuffer.getLength());
 	}
 	
-	public int read(byte[] recvBuffer, int off, int len) throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
-		receive();
+	public int read(byte[] recvBuffer, int off, int len) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
+		try{
+			receive();
+		}catch(SocketException e){
+			e.printStackTrace();
+			return -1;
+		}
+		
 		Byte temp;
 		for(int i = 0; i < len; i++){
 			if((temp =  streamBuffer.getByte()) != null){
@@ -80,7 +98,7 @@ public class AAPInputStream {
 		recvSocket.close();
 	}
 	
-	private void receive() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
+	private void receive() throws ServerNotRespondingException, ConnectionAbortEarlyException, SocketException,IOException{
 		recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		endOfPacket = 0;
 		while(endOfPacket != AAPPacket.END_OF_PACKET_FLAG){
