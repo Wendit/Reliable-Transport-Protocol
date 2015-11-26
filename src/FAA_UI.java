@@ -23,7 +23,6 @@ public class FAA_UI {
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
-    //protected enum 
     private MODE mode;
     protected static int port;
     protected static String emu_addr;
