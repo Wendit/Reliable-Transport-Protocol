@@ -189,9 +189,6 @@ public class AAPInputStream {
 				 endOfPacket = recvAAPPacket.getFlags();
 				 streamBuffer.put(recvAAPPacket.getPayload());
 				 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
-			 }else if(recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
-				 container.close();
-				 throw new ConnectionAbortEarlyException("Coneection abort unexpected.Socket closing.");
 			 }
 		 }
 		 return errorOccurs;	 

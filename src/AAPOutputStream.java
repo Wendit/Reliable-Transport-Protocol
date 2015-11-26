@@ -130,10 +130,6 @@ public class AAPOutputStream {
 					 shirinkWindowSize(currentWindowSize);
 					 //Fill the window, until list is empty or packets in window reach the maxium window size
 					 fillWindow();
-				 }else if (recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
-					 DebugUtils.debugPrint("Get a FIN from: "+recverAddress+" "+recverPort);
-					 container.close();
-					 throw new ConnectionAbortEarlyException("Coneection abort unexpected.Socket closing.");
 				 }
 			 }catch(FlagNotFoundException e){
 				 DebugUtils.debugPrint(e.getMessage());
