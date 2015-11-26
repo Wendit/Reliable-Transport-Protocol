@@ -58,7 +58,7 @@ public class AAPEchoClient {
   			break;
   		}
   	}
-  	DebugUtils.debugPrint(data.toString());
+  	DebugUtils.debugPrint("Current buffer:" + new String(data));
   	return size;
   }
 }
