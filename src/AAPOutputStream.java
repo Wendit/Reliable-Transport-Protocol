@@ -194,7 +194,7 @@ private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLarge
 		while(byteLeft - AAPPacket.MAX_PAYLOAD_SIZE >0){
 			try{
 				sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.NULL_FLAG,
-					(short)0, Arrays.copyOfRange(b, currentPos, currentPos+AAPPacket.MAX_PAYLOAD_SIZE));
+					(short)0, b);
 			}catch(FlagNotFoundException e){
 				e.printStackTrace();
 				break;
@@ -205,7 +205,7 @@ private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLarge
 		}
 		try{
 			sendAAPacket = new AAPPacket(currentSeqNum, 0, AAPPacket.END_OF_PACKET_FLAG,
-				(short)0, Arrays.copyOfRange(b, currentPos, currentPos+AAPPacket.MAX_PAYLOAD_SIZE));
+				(short)0, b);
 		}catch (FlagNotFoundException e){
 					e.printStackTrace();
 				}

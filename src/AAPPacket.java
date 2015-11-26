@@ -26,7 +26,7 @@ public class AAPPacket implements Serializable{
 	 * |Payload
 	 */
 	
-	public static final int MAX_PAYLOAD_SIZE = 256;
+	public static final int MAX_PAYLOAD_SIZE = 255;
 	public static final int PACKET_SIZE = 4 + 4 + 2 + 2 + 8 + 1 + MAX_PAYLOAD_SIZE;
 	
 	public static final short NULL_FLAG = 0;
@@ -69,6 +69,7 @@ public class AAPPacket implements Serializable{
 			this.windowSize = windowSize;
 			this.payloadSize = (byte) payload.length;
 			this.payload = payload; 
+			int x = payload.length;
 			this.checksum = getChecksum();
 		}
 	}
