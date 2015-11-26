@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public class FAA_UI {
 
-	protected final static int BUF_SIZE = 1024;
+	protected final static int BUF_SIZE = 256;
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
@@ -122,18 +122,29 @@ public class FAA_UI {
     		FileInputStream fis = new FileInputStream(toSend);
 
     		try {
+    			
+    			//file transfer
+        		byte[] sendByteBuff = new byte[BUF_SIZE];
+        		int byteBuffSize = 0;
+    	    		while((byteBuffSize = fis.read(sendByteBuff)) != -1) {
+    	    			out.write(sendByteBuff, 0, byteBuffSize);
+    	    			//out.write(sendByteBuff);
+        		}
+
+    			
+    			
     	//ack receiver the transmission
     	//	out.write(new String("#ready to transfer#").getBytes());
     	
-    	//file transfer
+    	//file transfer******************bug working version
+    			/*
     		byte[] sendByteBuff = new byte[BUF_SIZE];
     		int byteBuffSize = 0;
 	    		while((byteBuffSize = fis.read(sendByteBuff)) != -1) {
 	    			//out.write(sendByteBuff, 0, byteBuffSize);
 	    			out.write(sendByteBuff);
-	    			//out.flush();
     		}
-
+*/
     		/*
     		int c;
     		while((c = bufferedReader.read()) >=0 ) {
@@ -141,9 +152,9 @@ public class FAA_UI {
     		}
     	*/
     	//ack reciever the end of file transmission
-    		//out.flush();
+    			//*********************bug working version
+    	   // Thread.sleep(100);
         	out.write(new String("#end of transmission#").getBytes());
-        //	out.flush();
     	} catch (IOException e) {
     		fis.close();
     		throw e;
@@ -161,8 +172,40 @@ public class FAA_UI {
 		    	String response = "";
 		    	int size = 0;
 
-//		    	size = in.read(recvBuff);
-		    	//***************************************
+		    	
+		    	/*
+		    	if ((size = waitUntilRead(in)) == -1) {
+		    		fos.close();
+		    		return;
+		    	}
+		    	response = new String(recvBuff, 0, size);
+		    	*/
+		    	while((size = in.read(recvBuff)) > 0) {
+		    		response = new String(recvBuff, 0, size);
+		    		if(size == -1) {
+		    			fos.close();
+		    			throw new FileTransferException("read in -1 size, connection issue");
+		    		}
+		    //  while(!response.equalsIgnoreCase("#end of transmission#")) {
+		    		if(response.contains("#discard#")) {
+		    			toRecv.delete();
+		    			fos.close();
+		    			throw new FileTransferException();
+		    		}
+		    		
+		    		if(response.equalsIgnoreCase("#end of transmission#")) {
+		    			fos.close();
+		    			return;
+		    		}
+		    		fos.write(recvBuff, 0, size);
+		    		System.out.println("successful wrote into file.");
+		    		System.out.println("new size " + size);
+		    	}
+		    	
+		    	
+		    	
+		    	/**************************************************bug working version
+
 		    	if ((size = waitUntilRead(in)) == -1) {
 		    		fos.close();
 		    		return;
@@ -185,7 +228,8 @@ public class FAA_UI {
 		    		System.out.println("new size " + size);
 		    		response = new String(recvBuff, 0, size);
 		    	}
-
+		
+		    */
     		} catch(IOException e) {
     			fos.close();
     			throw e;

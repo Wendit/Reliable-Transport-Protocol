@@ -36,8 +36,8 @@ public class FAA_client extends FAA_UI{
     private static AAPInputStream in;
     private static AAPOutputStream out;
     private static boolean connected = false;
-    private final static String CLIENT_DOWNLOAD_PATH = "downloads/";
-    private final static String FILE_PATH = "test_files/";
+    private final static String CLIENT_DOWNLOAD_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/downloads/";
+    private final static String FILE_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/test_files/";
 
     public FAA_client() {
 	super(MODE.CLIENT);

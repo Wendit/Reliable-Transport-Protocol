@@ -30,8 +30,8 @@ import java.net.UnknownHostException;
  */
 public class FAA_server extends FAA_UI/* implements Runnable*/{
 	
-	private final static String SERVER_DOWNLOAD_PATH = "uploads/";
-    private final static String FILE_PATH = "test_files/";
+	private final static String SERVER_DOWNLOAD_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/uploads/";
+    private final static String FILE_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/test_files/";
 
     //private static boolean running = true;
     public FAA_server() {
@@ -147,6 +147,8 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 	    	sendFile(FILE_PATH + cmd_extra, out);
     	} catch (Exception e) {
 	    	out.write(new String("#discard#").getBytes());
+	    	System.out.println(e.getMessage());
+	    	//e.printStackTrace();
 	    	return false;
     	}
     	return true;
