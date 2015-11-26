@@ -69,7 +69,8 @@ public class AAPInputStream {
 		}
 		
 		Byte temp;
-		for(int i = 0; i < recvBuffer.length; i++){
+		int i;
+		for( i = 0; i < recvBuffer.length && streamBuffer.getLength() !=0 ; i++){
 			if((temp =  streamBuffer.getByte()) != null){
 				recvBuffer[i] = temp;
 			}
@@ -86,12 +87,13 @@ public class AAPInputStream {
 		}
 		
 		Byte temp;
-		for(int i = 0; i < len; i++){
+		int i;
+		for( i = 0; i < len && streamBuffer.getLength() !=0; i++){
 			if((temp =  streamBuffer.getByte()) != null){
 				recvBuffer[off+i] = temp;
 			}
 		}
-		return Math.min(len, streamBuffer.getLength());
+		return i;
 	}
 	
 	public void close(){
