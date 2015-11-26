@@ -40,8 +40,9 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     /**
      * @param args
      * @throws IOException 
+     * @throws InterruptedException 
      */
-    public static void main(String[] args) throws IOException, IllegalArgumentException {
+    public static void main(String[] args) throws IOException, IllegalArgumentException, InterruptedException {
 	// TODO Auto-generated method stub
 		validateInput(args);
 		System.out.println("Server: openning port " + port);
@@ -69,7 +70,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		server.close();
     }
 	
-    private static void handleClient(Socket clientSocket) throws IOException {
+    private static void handleClient(Socket clientSocket) throws IOException, InterruptedException {
 	//private static void handleClient(AAPSocket clientSocket) {
 		COMMAND recvcmd;
 		boolean curClient = true;
@@ -87,7 +88,8 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		System.out.println("Server: Handling client at " + clientAddress);
 		    
 		while ( curClient && (recvcmd = getRequest(in)) != COMMAND.DISCONNECT) {
-		    processRequest(in, out, recvcmd, clientSocket);
+		    System.out.println("Server while loop");
+			processRequest(in, out, recvcmd, clientSocket);
 		}
 			
 		System.out.println("Clent close the connection");
@@ -102,7 +104,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		} else if(recvcmd == COMMAND.GET) {
 			System.out.println("receive get request from " + new String(clientSocket.getInetAddress().getAddress()));
 			try {
-				if(handleGet(out)) {
+				if(handleGet(out, in)) {
 					System.out.println("Sending file successfully.");
 				} else {
 					System.out.println("Sending file failed.");
@@ -114,19 +116,20 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 			System.out.println("receive post request from " + new String(clientSocket.getInetAddress().getAddress()));
 		    //recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
 		}
+		System.out.println("processRequest");
 
     }
     
-    private static boolean handleGet(OutputStream out) throws IOException {
+    private static boolean handleGet(OutputStream out, InputStream in) throws IOException {
     	try {
 	    	out.write(new String("#ready to transfer#").getBytes());
 	    	System.out.println("recieve get" + cmd_extra + "request");
-	    	sendFile(FILE_PATH + cmd_extra, out);
+	    	sendFile(FILE_PATH + cmd_extra, out, in);
     	} catch (IOException e) {
 	    	out.write(new String("#discard#").getBytes());
 	    	return false;
     	}
-    		return true;
+    	return true;
     }
 
     private static boolean handlePost(InputStream in) throws IOException {
@@ -137,9 +140,11 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     private static COMMAND getRequest(InputStream in) throws IOException {
 		int recvSize = 0;
 		String request = "";
+		System.out.println("waiting for request.");
 		if((recvSize = in.read(recvBuff)) != -1) {
 		    request = new String(recvBuff, 0, recvSize);
 		}
+		System.out.println("get request " + request);
 		return processCommand(request, false); // ***********************************
     }
 

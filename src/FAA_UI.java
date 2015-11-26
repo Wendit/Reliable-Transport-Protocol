@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,10 +13,12 @@ import java.util.Scanner;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 public class FAA_UI {
 
+	protected final static int BUF_SIZE = 256;
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
@@ -25,7 +29,7 @@ public class FAA_UI {
     protected static int emu_port;
 
     protected static int windowSize;
-    protected static byte[] recvBuff = new byte[256];
+    protected static byte[] recvBuff = new byte[BUF_SIZE];
 
     protected static COMMAND command;
     protected static String cmd_extra;
@@ -119,67 +123,79 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static void sendFile(String filePath, OutputStream out) throws IOException {
-    	//read the file from path
-    
-    	//	Path path = new Path(filePath);
+    protected static void sendFile(String filePath, OutputStream out, InputStream in) throws IOException {
+    	
+    	//read the file from path	
     		File toSend = new File(filePath);
-    		FileReader fileReader = new FileReader(toSend);
-    		BufferedReader bufferedReader = new BufferedReader(fileReader);
+    		FileInputStream fis = new FileInputStream(toSend);
 
     		try {
     	//ack receiver the transmission
     	//	out.write(new String("#ready to transfer#").getBytes());
     	
     	//file transfer
-    		char[] sendBuff = new char[1024];
-    		int size = 0;
+    		byte[] sendByteBuff = new byte[BUF_SIZE];
+    		int byteBuffSize = 0;
+    		int size = in.read(recvBuff);
+    		String response = new String(recvBuff, 0, size);
+    		if(response.equalsIgnoreCase("#ready to receive#")) {
+	    		while((byteBuffSize = fis.read(sendByteBuff)) != -1) {
+	    			//out.write(sendByteBuff, 0, byteBuffSize);
+	    			out.write(sendByteBuff);
+	    			out.flush();
+	    		}
+    		}
+
     		/*
-    		while((size = bufferedReader.read(sendBuff)) > 0 ) {
-    			out.write(new String(sendBuff,0,size).getBytes());
-    		}*/
-    		
     		int c;
     		while((c = bufferedReader.read()) >=0 ) {
     			out.write(c);
     		}
-    	
+    	*/
     	//ack reciever the end of file transmission
+    		out.flush();
+    		//Thread.sleep(500);
         	out.write(new String("#end of transmission#").getBytes());
+        	out.flush();
     	} catch (IOException e) {
-    		bufferedReader.close();
+    		fis.close();
     		throw e;
     	}
-        	bufferedReader.close();
+    		fis.close();
     }
   
-    protected static void recvFile(String filePath, InputStream in) throws IOException, FileTransferException {
-    	//File toRecv;
-    	//BufferedWriter bufferwriter;
-   
+    protected static void recvFile(String filePath, InputStream in, OutputStream out) throws IOException, FileTransferException {
+
+    	System.out.println("start receiving file from " + filePath);
     		File toRecv = new File(filePath);
-    		FileWriter fileWriter = new FileWriter(toRecv);
-    		BufferedWriter bufferwriter= new BufferedWriter(fileWriter);
+    		FileOutputStream fos = new FileOutputStream(toRecv);
+		
     		try {
-	    	//	out.write(new String("#ready to receive#").getBytes());
+	    		out.write(new String("#ready to receive#").getBytes());
 		    	String response = "";
-		    	int size = in.read(recvBuff);
+		    	int size = 0;
+
+		    	size = in.read(recvBuff);
 		    	response = new String(recvBuff, 0, size);
-		    	while(!response.equalsIgnoreCase("#end of transmission#")) {
-		    		if(response.equalsIgnoreCase("#discard#")) {
+		      while(!response.equalsIgnoreCase("#end of transmission#")) {
+		    		if(response.contains("#discard#")) {
 		    			toRecv.delete();
-		    			bufferwriter.close();
+		    			fos.close();
 		    			throw new FileTransferException();
 		    		}
-		    		bufferwriter.write(response,0,size);
+		    		fos.write(recvBuff, 0, size);
+		    		System.out.println("successful wrote into file.");
 		    		size = in.read(recvBuff);
+		    		System.out.println("new size " + size);
 		    		response = new String(recvBuff, 0, size);
 		    	}
+
     		} catch(IOException e) {
-    			bufferwriter.close();
+    			fos.close();
     			throw e;
     		}
-	    bufferwriter.close();
+    		System.out.println("end of receive.");
+	    fos.close();
     }
 	
 }
