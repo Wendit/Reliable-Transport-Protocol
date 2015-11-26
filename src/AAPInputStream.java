@@ -47,6 +47,20 @@ public class AAPInputStream {
 		this.streamBuffer = new ByteBufferQueue();
 		this.container = container;
 		this.currentTries = MAX_TRY;
+		try {
+			this.ackAAPPacket = new AAPPacket(
+					 currentSeqNum,lastAckNum,AAPPacket.ACK_FLAG,
+					 remainWindowSize, "ack".getBytes());
+		} catch (FlagNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PayLoadSizeTooLargeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public Byte read() throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
@@ -65,6 +79,7 @@ public class AAPInputStream {
 		public int read(byte[] recvBuffer) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
 		try{
 				receive();
+				DebugUtils.debugPrint("Trying to read an input ");
 				Byte temp;
 				int i;
 				for( i = 0; i < recvBuffer.length && streamBuffer.getLength() !=0 ; i++){
@@ -109,7 +124,8 @@ public class AAPInputStream {
 		currentTries = MAX_TRY;
 		while(endOfPacket != AAPPacket.END_OF_PACKET_FLAG){
 			 try {
-				 recvSocket.receive(recvPacket);			 
+				 recvSocket.receive(recvPacket);	
+				 DebugUtils.debugPrint("Recieved packet from "+remoteSocketAddress +" "+remoteSocketPort);
 				 sendAckBack();
 				 }catch(InterruptedIOException e){
 					 currentTries --;
@@ -137,17 +153,20 @@ public class AAPInputStream {
 			} catch (FlagNotFoundException | PayLoadSizeTooLargeException e) {
 				e.printStackTrace();
 			}
-			 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
-					  ackAAPPacket.getPacketData().length, 
-					  InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
-		 }		 
+		 }	
+		 
+		 ackPacket = new DatagramPacket(ackAAPPacket.getPacketData(), 
+				  ackAAPPacket.getPacketData().length, 
+				  InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
 		 // Sending ack back
+		 DebugUtils.debugPrint("Send ACK back to "+remoteSocketAddress +" "+remoteSocketPort);
 		 recvSocket.send(ackPacket);
 	}
 	
 	private boolean checkError(DatagramPacket recvPacket) throws IOException, ConnectionAbortEarlyException{
 		boolean corrupted = false;
 		boolean errorOccurs = false;
+		DebugUtils.debugPrint("Check error for the packet from "+remoteSocketAddress +" "+remoteSocketPort);
 		try{
 			 recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
 		 }catch(FlagNotFoundException e){

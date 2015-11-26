@@ -3,8 +3,9 @@ import java.net.SocketException;
 import java.io.IOException;
 
 
-public class AAPEchoClient {
 
+public class AAPEchoClient {
+	static byte[] data;
   public static void main(String[] args) throws IOException {
 
     if ((args.length < 2) || (args.length > 3))  // Test for correct # of args
@@ -12,8 +13,8 @@ public class AAPEchoClient {
 
     String server = args[0];       // Server name or IP address
     // Convert argument String to bytes using the default character encoding
-    byte[] data = args[1].getBytes();
 
+     data = args[1].getBytes();
     int servPort = (args.length == 3) ? Integer.parseInt(args[2]) : 7;
 
     // Create socket that is connected to server on specified port
@@ -31,11 +32,8 @@ public class AAPEchoClient {
 	    // Receive the same string back from the server
 	    int totalBytesRcvd = 0;  // Total bytes received so far
 	    int bytesRcvd;           // Bytes received in last read
-	    while (totalBytesRcvd < data.length) {
-	      if ((bytesRcvd = in.read(data, totalBytesRcvd,  
-	                        data.length - totalBytesRcvd)) == -1)
-	        throw new SocketException("Connection closed prematurely");
-	      totalBytesRcvd += bytesRcvd;
+	    while (totalBytesRcvd < data.length) {    	
+	      totalBytesRcvd += waitUntilRead(in);;
 	    }  // data array is full
 	
 	    System.out.println("Received: " + new String(data));
@@ -51,5 +49,16 @@ public class AAPEchoClient {
 	}catch(PayLoadSizeTooLargeException e){
 		e.printStackTrace();
 	}
+  }
+  
+  protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+  	int size = 0;
+  	while((size = in.read(data)) <= 0) {
+  		if(size == -1) {
+  			break;
+  		}
+  	}
+  	DebugUtils.debugPrint(data.toString());
+  	return size;
   }
 }

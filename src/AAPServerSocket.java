@@ -48,6 +48,7 @@ public class AAPServerSocket {
 	    while(true){
 	    	try{
 	    		socket.receive(recvPacket);
+	    		DebugUtils.debugPrint("Recieved SYN from client");
 	    		//block until receive
 	    		break;
 	    	}catch(InterruptedIOException e){
@@ -58,7 +59,8 @@ public class AAPServerSocket {
     	remoteSocketAddress = recvPacket.getAddress().toString().split("/")[1];
     	remoteSocketPort = recvPacket.getPort();
     	
-    	try{		
+    	try{	
+    		DebugUtils.debugPrint("Recieved SYN from client: "+remoteSocketAddress+" "+remoteSocketPort);
     		//Extract SYN
     		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
     		//Send SYN_ACK
@@ -68,27 +70,29 @@ public class AAPServerSocket {
     			DatagramPacket temp = new DatagramPacket(sendAAPacket.getPacketData(),
   					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
     	    	socket.send(temp);
+    	    	DebugUtils.debugPrint("Send SYN_ACK to client: "+remoteSocketAddress+" "+remoteSocketPort);
     		}
     		
-    		while(tries != 0){
-	    		//Receive ACK
-	    		try{
-	    			socket.receive(recvPacket);
-	    			//Extract ACK
-	        		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-	        		if(recvPacket.getAddress().toString().split("/")[1].equals(remoteSocketAddress)
-	        				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
-	        			tries = MAX_TRY;
-	        			socket.close();
-	        			return true;
-	        		}else{
-	        			tries --;
-	        		}
-	    			
-	    		}catch(InterruptedIOException e){
-	    			tries --;
-	    		}
+
+    		//Receive ACK
+    		try{
+    			DebugUtils.debugPrint("Try to recieve ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
+    			socket.receive(recvPacket);
+    			//Extract ACK
+        		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+        		if(recvPacket.getAddress().toString().split("/")[1].equals(remoteSocketAddress)
+        				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
+        			DebugUtils.debugPrint("Recieved ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
+        			socket.close();
+        			return true;
+        		}
+    			
+    		}catch(InterruptedIOException e){
+    			DebugUtils.debugPrint("Recieve SYN_ACK times out: "+remoteSocketAddress+" "+remoteSocketPort);
+    			socket.close();
+    			return false;
     		}
+		
     	}catch(FlagNotFoundException e){
 			 DebugUtils.debugPrint(e.getMessage());
 		 }catch(PacketCorruptedException e){

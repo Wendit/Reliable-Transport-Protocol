@@ -2,7 +2,7 @@ import java.net.*;  // for Socket, ServerSocket, and InetAddress
 import java.io.*;   // for IOException and Input/OutputStream
 
 public class AAPEchoServer {
-
+	static byte[] receiveBuf;
   private static final int BUFSIZE = 32;   // Size of receive buffer
 
 	  public static void main(String[] args) throws IOException {
@@ -16,7 +16,7 @@ public class AAPEchoServer {
 	    AAPServerSocket servSock = new AAPServerSocket(servPort);
 	
 	    int recvMsgSize;   // Size of received message
-	    byte[] receiveBuf = new byte[BUFSIZE];  // Receive buffer
+	    receiveBuf = new byte[BUFSIZE];  // Receive buffer
 	    try{
 		    while (true) { // Run forever, accepting and servicing connections
 		      AAPSocket clntSock = servSock.accept();     // Get client connection
@@ -28,9 +28,10 @@ public class AAPEchoServer {
 		      AAPOutputStream out = clntSock.getOutputStream();
 		
 		      // Receive until client closes connection, indicated by -1 return
-		      while ((recvMsgSize = in.read(receiveBuf)) != -1) {
-		        out.write(receiveBuf, 0, recvMsgSize);
-		      }
+		      
+		      recvMsgSize = waitUntilRead(in);
+		      out.write(receiveBuf, 0, recvMsgSize);
+		      
 		      if(!clntSock.socket.isClosed())
 		    	  clntSock.close();  // Close the socket.  We are done with this client!
 		    }
@@ -39,4 +40,14 @@ public class AAPEchoServer {
 		  e.printStackTrace();
 	  }
 	}
+	  
+	  protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+		  	int size = 0;
+		  	while((size = in.read(receiveBuf)) <= 0) {
+		  		if(size == -1) {
+		  			break;
+		  		}
+		  	}
+		  	return size;
+		  }
 }

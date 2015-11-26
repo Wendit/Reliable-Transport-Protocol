@@ -55,6 +55,7 @@ public class AAPOutputStream {
 	}
 	
 	public void write(byte[] bArray) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException{
+		DebugUtils.debugPrint("Write string to: "+recverAddress+" "+recverPort);
 		send(bArray);
 	}
 	
@@ -76,6 +77,7 @@ public class AAPOutputStream {
 	  fillWindow();//Automatically sends the packets added
 	  lastAcked = packetWindow.getFirst().getSeqNum();
 	  currentConnectionTries = MAX_CONNECTION_TRY;
+	  DebugUtils.debugPrint("Send packets to: "+recverAddress+" "+recverPort);
 	  while(currentConnectionTries != 0 &&(packetsList.size() != 0 || packetWindow.size() != 0)){
 		  try{
 			  recvAckAndFillWindow();
@@ -96,17 +98,14 @@ public class AAPOutputStream {
 	
 	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{	
 		AAPPacket recvAAPPacket;
-		while(true){		
-			/*
-			 * check both list and break the loop if all data sent
-			 * 
-			 * */
-			
-			
+		while(true){			
 			try {
 				//waiting for ack
 				sendSocket.receive(recvPacket);
+				DebugUtils.debugPrint("Recieved ack from: "+recverAddress+" "+recverPort);
+				
 			} catch (InterruptedIOException e) {
+				DebugUtils.debugPrint("Failed to recieve ack from: "+recverAddress+" "+recverPort);
 				throw new ServerNotRespondingException("Remote is not responding");
 				//*****************return
 			}
@@ -128,6 +127,7 @@ public class AAPOutputStream {
 					 //Fill the window, until list is empty or packets in window reach the maxium window size
 					 fillWindow();
 				 }else if (recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
+					 DebugUtils.debugPrint("Get a FIN from: "+recverAddress+" "+recverPort);
 					 container.close();
 					 throw new ConnectionAbortEarlyException("Coneection abort unexpected.Socket closing.");
 				 }
@@ -160,6 +160,7 @@ public class AAPOutputStream {
 	}
 	
 	private void discardAckedPackets(int ackedNumber){
+		DebugUtils.debugPrint("Discard acked packet, ackedNumber: "+ ackedNumber);
 		while(packetWindow.size()!=0 && packetWindow.peek().getSeqNum() < ackedNumber){
 			packetWindow.poll();
 		}
@@ -167,7 +168,9 @@ public class AAPOutputStream {
 	
 	private void fillWindow() throws UnknownHostException, IOException{
 		while(packetWindow.size() < currentWindowSize && packetsList.size() != 0){
-			sendSocket.send(new DatagramPacket(moveListHeadToWindow().getPacketData(),
+			AAPPacket temp = moveListHeadToWindow();
+			DebugUtils.debugPrint("Fill window with packet "+ temp.getPayloadToString());
+			sendSocket.send(new DatagramPacket(temp.getPacketData(),
 					  AAPPacket.PACKET_SIZE,InetAddress.getByName(recverAddress), recverPort));
 		}
 	}
@@ -180,6 +183,7 @@ public class AAPOutputStream {
 	 */
 	
 	private void sendPacketInWindow(int num) throws UnknownHostException, IOException{
+		DebugUtils.debugPrint("Send packet in window to: "+recverAddress+" "+recverPort);
 		 for(int i = 0; i < num; i++){
 			 sendSocket.send(new DatagramPacket(packetWindow.get(i).getPacketData(),
 					  AAPPacket.PACKET_SIZE,InetAddress.getByName(recverAddress), recverPort));
@@ -188,7 +192,7 @@ public class AAPOutputStream {
 	}
 	
 private void putPacketInQueue(byte[] b) throws  IOException, PayLoadSizeTooLargeException{
-		
+		DebugUtils.debugPrint("Put packet in queue to: "+recverAddress+" "+recverPort);
 		int byteLeft = b.length;
 		int currentPos = 0;
 		while(byteLeft - AAPPacket.MAX_PAYLOAD_SIZE >0){

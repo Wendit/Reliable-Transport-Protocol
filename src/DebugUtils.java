@@ -1,6 +1,6 @@
 
 public class DebugUtils {
-	public static boolean DEBUG_FLAG = false;
+	public static boolean DEBUG_FLAG = true;
 	public DebugUtils() {
 	}
 	

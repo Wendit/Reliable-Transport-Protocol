@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 public class AAPSocket {
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
 	private static final int TIMEOUT = 3000;
-	private static final int MAX_TRY = 10;
+	private static final int MAX_TRY = 5;
 	private String remoteSocketAddress;
 	DatagramSocket socket;
 	private int remoteSocketPort;
@@ -67,46 +67,6 @@ public class AAPSocket {
 	}
 	
 	public void close() throws UnknownHostException, IOException{
-		AAPPacket sendAAPacket;
-		AAPPacket recvAAPPacket;
-		DatagramPacket recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
-		int currentTry = MAX_TRY;
-		while(currentTry != 0){
-			try {
-				sendAAPacket = new AAPPacket(0, 0, AAPPacket.FIN_FLAG,
-						(short)0, "FIN".getBytes());
-				socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-						  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-				try{
-					socket.receive(recvPacket);
-					recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-					if(recvAAPPacket.getFlags() == AAPPacket.FIN_ACK_FLAG || recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
-						if(recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
-							sendAAPacket = new AAPPacket(0, 0, AAPPacket.FIN_ACK_FLAG,
-									(short)0, "FIN_ACK_FLAG".getBytes());
-							socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-									  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-						}else{
-							sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
-									(short)0, "ACK".getBytes());
-							socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-									  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-							socket.close();
-							return;
-						}
-					}else{
-						currentTry--;
-					}
-				}catch(InterruptedIOException e){
-					currentTry--;
-				} catch (PacketCorruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} catch (FlagNotFoundException | PayLoadSizeTooLargeException e) {
-				e.printStackTrace();
-			}		
-		}
 		socket.close();
 		return;
 	}
@@ -131,13 +91,15 @@ public class AAPSocket {
 					DatagramPacket temp = new DatagramPacket(sendAAPacket.getPacketData(),
 							  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
 			    	socket.send(temp);
+			    	DebugUtils.debugPrint("Send SYN to server: "+remoteSocketAddress+" "+remoteSocketPort);
 		    	
-					//Receive ACK
+					//Receive SYN_ACK
 					sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
 							(short)0, "SYN".getBytes());
 					socket.receive(recvPacket);
+					DebugUtils.debugPrint("Recieved SYN_ACK from server: "+remoteSocketAddress+" "+remoteSocketPort);
 									    	
-		    		//Extract ACK
+		    		//Extract SYN_ACK
 		    		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
 		    		if(recvAAPPacket.getFlags() == AAPPacket.SYN_ACK_FLAG){
 		    			sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
@@ -147,6 +109,7 @@ public class AAPSocket {
 		    	    	
 		    	    	this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
 		    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		    			DebugUtils.debugPrint("Send ACK back to server: "+remoteSocketAddress+" "+remoteSocketPort);
 		    			break;
 	
 		    		}
@@ -154,11 +117,13 @@ public class AAPSocket {
 		    	}catch(InterruptedIOException e){
 		    		tries--;
 		    		if(tries == 0){
+		    			DebugUtils.debugPrint("Server is not responding. Please reset sockt.");
 		    			throw new ServerNotRespondingException("Server is not responding. Please reset sockt.");
 		    		}
 		    	}
 		    	catch(FlagNotFoundException | PayLoadSizeTooLargeException | PacketCorruptedException e){
-		    			e.printStackTrace();
+		    		tries--;	
+		    		e.printStackTrace();
 		    	}
 	    	}
 	   }

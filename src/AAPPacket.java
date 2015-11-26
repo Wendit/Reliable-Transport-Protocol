@@ -106,6 +106,10 @@ public class AAPPacket implements Serializable{
 	public byte[] getPayload() {
 		return payload;
 	}
+	
+	public String getPayloadToString() {
+		return new String(payload);
+	}
 
 	public int getPayloasSize() {
 		return payloadSize;
