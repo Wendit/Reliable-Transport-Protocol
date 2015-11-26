@@ -15,6 +15,8 @@ import java.util.Queue;
 public class AAPInputStream {
 	private static final int TIMEOUT = 3000;
 	private static final short MAX_WINDOW_SIZE = Short.MAX_VALUE;
+	private static final int MAX_TRY = 10;
+	private int currentTries;
 	private String remoteSocketAddress;
 	private int remoteSocketPort;
 	
@@ -28,27 +30,31 @@ public class AAPInputStream {
 	
 	private ByteBufferQueue streamBuffer;
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
+	private short endOfPacket; 
+	
 
 	private int currentSeqNum;
 	private int lastAckNum;
-	
-	public AAPInputStream(int port,int initSeqNum, String remoteSocketAddress, int remoteSocketPort)
+	private AAPSocket container;
+	public AAPInputStream(DatagramSocket socket,int initSeqNum, String remoteSocketAddress, int remoteSocketPort,AAPSocket container)
 			throws UnknownHostException, SocketException  {
-		recvSocket = new DatagramSocket(port);
+		recvSocket = socket;
 		recvSocket.setSoTimeout(TIMEOUT);
 		this.currentSeqNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.lastAckNum = AAPUtils.incrementSeqNum(initSeqNum);
 		this.remoteSocketAddress = remoteSocketAddress;
 		this.remoteSocketPort = remoteSocketPort;
 		this.streamBuffer = new ByteBufferQueue();
+		this.container = container;
+		this.currentTries = MAX_TRY;
 	}
 	
-	public Byte read() throws IOException{
+	public Byte read() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
 		receive();
 		return streamBuffer.getByte();
 	}
 	
-	public int read(byte[] recvBuffer) throws IOException{
+	public int read(byte[] recvBuffer) throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
 		receive();
 		Byte temp;
 		for(int i = 0; i < recvBuffer.length; i++){
@@ -59,7 +65,7 @@ public class AAPInputStream {
 		return Math.min(recvBuffer.length, streamBuffer.getLength());
 	}
 	
-	public int read(byte[] recvBuffer, int off, int len) throws IOException{
+	public int read(byte[] recvBuffer, int off, int len) throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
 		receive();
 		Byte temp;
 		for(int i = 0; i < len; i++){
@@ -74,22 +80,26 @@ public class AAPInputStream {
 		recvSocket.close();
 	}
 	
-	private int receive() throws IOException{
+	private void receive() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{
 		recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
-		int bytesRead = 0;
-		
-		while(true){
+		endOfPacket = 0;
+		while(endOfPacket != AAPPacket.END_OF_PACKET_FLAG){
 			 try {
 				 recvSocket.receive(recvPacket);
 				 }catch(InterruptedIOException e){
+					 currentTries --;
+					 if(currentTries == 0){
+						 container.close();
+						 throw new ServerNotRespondingException("Remote not responding. Connection abort. Please reset connection.");
+					 }
 					 break;
-				 }		 
+				 }	
+			 currentTries = MAX_TRY;
 			 sendAckBack();
 		}
-		return bytesRead;
 	}
 	
-	private void sendAckBack() throws UnknownHostException, IOException{
+	private void sendAckBack() throws UnknownHostException, IOException, ConnectionAbortEarlyException{
 		//error checking
 		//Drop everything except the packet which is not corrupted and is expected
 		//Always Ack last recieved packet upon recieving new packets
@@ -115,7 +125,7 @@ public class AAPInputStream {
 		 recvSocket.send(ackPacket);
 	}
 	
-	private boolean checkError(DatagramPacket recvPacket) throws IOException{
+	private boolean checkError(DatagramPacket recvPacket) throws IOException, ConnectionAbortEarlyException{
 		boolean corrupted = false;
 		boolean errorOccurs = false;
 		try{
@@ -131,10 +141,19 @@ public class AAPInputStream {
 		 else if(recvAAPPacket.getSeqNum() != lastAckNum){
 					 errorOccurs = true;
 				 }
-		//If no errors, put payload into our buffer and change the remaining window size
+		 else if(!recvPacket.getAddress().equals(InetAddress.getByName(remoteSocketAddress))){
+			 //Not from the expected user
+			 errorOccurs = true;
+		 }
 		 else{
-			 streamBuffer.put(recvAAPPacket.getPayload());
-			 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
+			 if(recvAAPPacket.getFlags() == AAPPacket.NULL_FLAG){
+				 endOfPacket = recvAAPPacket.getFlags();
+				 streamBuffer.put(recvAAPPacket.getPayload());
+				 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());
+			 }else if(recvAAPPacket.getFlags() == AAPPacket.FIN_FLAG){
+				 container.close();
+				 throw new ConnectionAbortEarlyException("Coneection abort unexpected.Socket closing.");
+			 }
 		 }
 		 return errorOccurs;	 
 	}

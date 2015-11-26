@@ -33,6 +33,7 @@ public class AAPPacket implements Serializable{
 	public static final short SYN_FLAG = 1;
 	public static final short ACK_FLAG = 1 << 1;
 	public static final short FIN_FLAG = 1 << 2;
+	public static final short END_OF_PACKET_FLAG = 1 << 3;
 	public static final short SYN_ACK_FLAG = SYN_FLAG|ACK_FLAG;
 	public static final short FIN_ACK_FLAG = FIN_FLAG|ACK_FLAG;
 	
