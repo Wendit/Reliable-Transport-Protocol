@@ -75,7 +75,7 @@ public class AAPInputStream {
 				recvBuffer[i] = temp;
 			}
 		}
-		return Math.min(recvBuffer.length, streamBuffer.getLength());
+		return i;
 	}
 	
 	public int read(byte[] recvBuffer, int off, int len) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
