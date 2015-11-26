@@ -91,8 +91,15 @@ public class AAPPacket implements Serializable{
 		this.windowSize = buffer.getShort();
 		this.checksum = buffer.getLong();
 		this.payloadSize = buffer.get();
-		this.payload = new byte[payloadSize];
-		buffer.get(this.payload, 0, payloadSize); 
+		int size = 0;
+		if(payloadSize < 0){
+			size = 256 + payloadSize ; 
+		}else{
+			size = payloadSize;
+		}
+		this.payload = new byte[size];
+		DebugUtils.debugPrint(String.valueOf(payloadSize));
+		buffer.get(this.payload, 0, size); 
 		
 		if(this.checksum != getChecksum()){
 			throw new PacketCorruptedException("Checksum does not match. The packet is corrupted.");
