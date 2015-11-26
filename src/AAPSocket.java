@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 public class AAPSocket {
 	private byte[] packetBuffer = new byte[AAPPacket.PACKET_SIZE];
 	private static final int TIMEOUT = 3000;
-	private static final int MAX_TRY = 5;
+	private static final int MAX_TRY = 10;
 	private String remoteSocketAddress;
 	DatagramSocket socket;
 	private int remoteSocketPort;
@@ -111,19 +111,18 @@ public class AAPSocket {
 		    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
 		    			DebugUtils.debugPrint("Send ACK back to server: "+remoteSocketAddress+" "+remoteSocketPort);
 		    			break;
-	
 		    		}
 		    		
 		    	}catch(InterruptedIOException e){
 		    		tries--;
 		    		if(tries == 0){
-		    			DebugUtils.debugPrint("Server is not responding. Please reset sockt.");
+		    			DebugUtils.debugPrint("Server is not responding. Please reset the sockt.");
 		    			throw new ServerNotRespondingException("Server is not responding. Please reset sockt.");
 		    		}
 		    	}
 		    	catch(FlagNotFoundException | PayLoadSizeTooLargeException | PacketCorruptedException e){
 		    		tries--;	
-		    		e.printStackTrace();
+		    		e.getMessage();
 		    	}
 	    	}
 	   }

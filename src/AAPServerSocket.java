@@ -41,28 +41,21 @@ public class AAPServerSocket {
 		DatagramPacket recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		AAPPacket recvAAPPacket;
 	    AAPPacket sendAAPacket;
-	    socket.setSoTimeout(TIMEOUT);
-	    int tries = MAX_TRY;
-	    
-    	//Receive SYN
-	    while(true){
-	    	try{
-	    		socket.receive(recvPacket);
-	    		DebugUtils.debugPrint("Recieved SYN from client");
-	    		//block until receive
-	    		break;
-	    	}catch(InterruptedIOException e){
-	    		
-	    	}
-	    }
-	    
-    	remoteSocketAddress = recvPacket.getAddress().toString().split("/")[1];
-    	remoteSocketPort = recvPacket.getPort();
-    	
-    	try{	
-    		DebugUtils.debugPrint("Recieved SYN from client: "+remoteSocketAddress+" "+remoteSocketPort);
+	    socket.setSoTimeout(TIMEOUT);    	
+		try {
+			
+	    	//Receive SYN
+		    socket.receive(recvPacket);
+		    DebugUtils.debugPrint("Recieved SYN from client");
+		    //block until receive
+
+	    	remoteSocketAddress = recvPacket.getAddress().toString().split("/")[1];
+	    	remoteSocketPort = recvPacket.getPort();
+	    	
+			DebugUtils.debugPrint("Recieved packet from client: "+remoteSocketAddress+" "+remoteSocketPort);
     		//Extract SYN
     		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+    		
     		//Send SYN_ACK
     		if(recvAAPPacket.getFlags() == AAPPacket.SYN_FLAG){
     			sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_ACK_FLAG,
@@ -71,36 +64,44 @@ public class AAPServerSocket {
   					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
     	    	socket.send(temp);
     	    	DebugUtils.debugPrint("Send SYN_ACK to client: "+remoteSocketAddress+" "+remoteSocketPort);
+    		}else{
+    			socket.close();
+    	    	return false;
     		}
     		
 
     		//Receive ACK
-    		try{
-    			DebugUtils.debugPrint("Try to recieve ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
-    			socket.receive(recvPacket);
-    			//Extract ACK
-        		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-        		String newSender = recvPacket.getAddress().toString().split("/")[1];
-        		if(newSender.equals(remoteSocketAddress)
-        				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
-        			DebugUtils.debugPrint("Recieved ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
-        			socket.close();
-        			return true;
-        		}
-    			
-    		}catch(InterruptedIOException e){
-    			DebugUtils.debugPrint("Recieve SYN_ACK times out: "+remoteSocketAddress+" "+remoteSocketPort);
+			DebugUtils.debugPrint("Try to recieve ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
+			socket.receive(recvPacket);
+			//Extract ACK
+    		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+    		
+    		String newSender = recvPacket.getAddress().toString().split("/")[1];
+    		if(newSender.equals(remoteSocketAddress)
+    				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
+    			DebugUtils.debugPrint("Recieved ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
     			socket.close();
-    			return false;
+    			return true;
     		}
+    			
 		
     	}catch(FlagNotFoundException e){
 			 DebugUtils.debugPrint(e.getMessage());
+			 socket.close();
+	 		 return false;
 		 }catch(PacketCorruptedException e){
 			 DebugUtils.debugPrint(e.getMessage());
+			 socket.close();
+	 		 return false;
 		 }catch(PayLoadSizeTooLargeException e){
 			 DebugUtils.debugPrint(e.getMessage());
-		 }
+			 socket.close();
+	 		 return false;
+		 } catch(InterruptedIOException e){
+ 			DebugUtils.debugPrint("Three way handshake times out: "+remoteSocketAddress+" "+remoteSocketPort);
+ 			socket.close();
+ 			return false;
+ 		}
     	socket.close();
     	return false;
 	}

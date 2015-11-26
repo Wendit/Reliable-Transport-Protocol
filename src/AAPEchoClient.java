@@ -15,9 +15,7 @@ public class AAPEchoClient {
     String server = args[0];       // Server name or IP address
     // Convert argument String to bytes using the default character encoding
 
-     //data = args[1].getBytes();
-    data = new byte[400];
-    Arrays.fill(data, (byte)200);
+    data = args[1].getBytes();
     int servPort = (args.length == 3) ? Integer.parseInt(args[2]) : 7;
 
     // Create socket that is connected to server on specified port
@@ -34,10 +32,9 @@ public class AAPEchoClient {
 	
 	    // Receive the same string back from the server
 	    int totalBytesRcvd = 0;  // Total bytes received so far
-	    int bytesRcvd;           // Bytes received in last read
-	    while (totalBytesRcvd < data.length) {    	
-	      totalBytesRcvd += waitUntilRead(in);;
-	    }  // data array is full
+	    int bytesRcvd;           // Bytes received in last read 	
+	    totalBytesRcvd += waitUntilRead(in);;
+	    // data array is full
 	
 	    System.out.println("Received: " + new String(data));
 	
@@ -56,12 +53,7 @@ public class AAPEchoClient {
   
   protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
   	int size = 0;
-  	while((size = in.read(data)) <= 0) {
-  		if(size == -1) {
-  			break;
-  		}
-  	}
-  	DebugUtils.debugPrint("Current buffer:" + new String(data));
+  	while((size = in.read(data)) == 0);
   	return size;
   }
 }
