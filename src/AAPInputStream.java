@@ -121,13 +121,11 @@ public class AAPInputStream {
 		//error checking
 		//Drop everything except the packet which is not corrupted and is expected
 		//Always Ack last recieved packet upon recieving new packets
-		 if(!checkError(recvPacket) || ackAAPPacket == null){
+		 if(!checkError(recvPacket)){
 			 //If ackAAPPacket = null, construct new ackPacket
 			 //otherwise increment lastAckNum and update 
 			 //ackPacket
-			 if(ackAAPPacket != null){
-				 lastAckNum = AAPUtils.incrementSeqNum(lastAckNum);
-			 }
+			lastAckNum = AAPUtils.incrementSeqNum(lastAckNum);
 			 try {
 				ackAAPPacket = new AAPPacket(
 						 currentSeqNum++,lastAckNum,AAPPacket.ACK_FLAG,
