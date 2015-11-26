@@ -1,10 +1,12 @@
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+//import java.io.InputStream;
+//import java.io.OutputStream;
+//import java.net.ServerSocket;
+//import java.net.Socket;
+//import java.net.SocketAddress;
 
 
 /*
@@ -42,11 +44,11 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
      * @throws IOException 
      * @throws InterruptedException 
      */
-    public static void main(String[] args) throws IOException, IllegalArgumentException, InterruptedException {
+    public static void main(String[] args) throws IOException, IllegalArgumentException {
 	// TODO Auto-generated method stub
 		validateInput(args);
 		System.out.println("Server: openning port " + port);
-		ServerSocket server = new ServerSocket(port);
+		AAPServerSocket server = new AAPServerSocket(port);
 		//AAPServerSocket server = new AAPServerSocket(port);
 		/*	
 			new Thread(new Runnable(){
@@ -64,13 +66,18 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		while (running) {
 		    //if(userCommand()
 		   // handleCommands(userCommand(), server);
-		    if(running)
-		    	handleClient(server.accept());
+		    if(running) {
+		    	try {
+		    		handleClient(server.accept());
+		    	} catch(Exception e) {
+		    		System.out.println(e.getMessage());
+		    	}
+		    }
 		}
 		server.close();
     }
 	
-    private static void handleClient(Socket clientSocket) throws IOException, InterruptedException {
+    private static void handleClient(AAPSocket clientSocket) throws Exception   {
 	//private static void handleClient(AAPSocket clientSocket) {
 		COMMAND recvcmd;
 		boolean curClient = true;
@@ -78,18 +85,22 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		  AAPInputStream in = clientSocket.getInputStream();
 		  AAPOutputStream out = clientSocket.getOutputStream();
 		*/
-		InputStream in = clientSocket.getInputStream();
-		OutputStream out = clientSocket.getOutputStream();
+		AAPInputStream in = clientSocket.getInputStream();
+		AAPOutputStream out = clientSocket.getOutputStream();
 		    
 		/*
 		 * Test purpose
 		 * */
-		SocketAddress clientAddress = clientSocket.getRemoteSocketAddress();
-		System.out.println("Server: Handling client at " + clientAddress);
-		    
+		//InetAddress clientAddress = clientSocket.getRemoteSocketAddress();
+		//System.out.println("Server: Handling client at " + clientAddress.getAddress());
+		try {
 		while ( curClient && (recvcmd = getRequest(in)) != COMMAND.DISCONNECT) {
 		    System.out.println("Server while loop");
 			processRequest(in, out, recvcmd, clientSocket);
+		}
+		} catch(Exception e) {
+			clientSocket.close();
+			throw e;
 		}
 			
 		System.out.println("Clent close the connection");
@@ -98,22 +109,22 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     }
 
 
-    private static void processRequest(InputStream in, OutputStream out, COMMAND recvcmd, Socket clientSocket) {
+    private static void processRequest(AAPInputStream in, AAPOutputStream out, COMMAND recvcmd, AAPSocket clientSocket) {
 		if(recvcmd == COMMAND.CONNECT) {
-		    System.out.println("receive connect request from " + clientSocket.getRemoteSocketAddress());
+		   // System.out.println("receive connect request from " + clientSocket.getRemoteSocketAddress());
 		} else if(recvcmd == COMMAND.GET) {
-			System.out.println("receive get request from " + new String(clientSocket.getInetAddress().getAddress()));
+			//System.out.println("receive get request from " + new String(clientSocket.getRemoteSocketAddress().getAddress()));
 			try {
 				if(handleGet(out)) {
 					System.out.println("Sending file successfully.");
 				} else {
 					System.out.println("Sending file failed.");
 				}
-			} catch(IOException e) {
+			} catch(Exception e) {
 				System.out.println("Connection issue: " + e.getMessage());
 			}
 		} else if (recvcmd == COMMAND.POST) {
-			System.out.println("receive post request from " + new String(clientSocket.getInetAddress().getAddress()));
+			//System.out.println("receive post request from " + new String(clientSocket.getRemoteSocketAddress().getAddress()));
 			try {
 				if(handlePost(in, out)) {
 					System.out.println("Receiving file successfully.");
@@ -128,30 +139,29 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 
     }
     
-    private static boolean handleGet(OutputStream out) throws IOException {
+    private static boolean handleGet(AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
     	try {
 	    	out.write(new String("#ready to transfer#").getBytes());
 	    	System.out.println("recieve get" + cmd_extra + "request");
 	    	sendFile(FILE_PATH + cmd_extra, out);
-    	} catch (IOException e) {
+    	} catch (Exception e) {
 	    	out.write(new String("#discard#").getBytes());
 	    	return false;
     	}
     	return true;
     }
 
-    private static boolean handlePost(InputStream in, OutputStream out) throws IOException, FileTransferException {
+    private static boolean handlePost(AAPInputStream in, AAPOutputStream out) throws IOException, FileTransferException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
     	try {
     		out.write(new String("#ready to receive#").getBytes());
 	    	System.out.println("recieve post" + cmd_extra + "request");
 	    	recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
     	} catch (IOException e) {
-    		
-    		return false;
+    		System.out.println(e.getMessage());
     	}
     	return true;
     }
-    private static COMMAND getRequest(InputStream in) throws IOException {
+    private static COMMAND getRequest(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
 		int recvSize = 0;
 		String request = "";
 		System.out.println("waiting for request.");
@@ -163,7 +173,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     }
 
 
-    protected static void handleCommands(COMMAND command, ServerSocket server) {
+    protected static void handleCommands(COMMAND command, AAPServerSocket server) {
 		//protected static void handleCommands(COMMAND command, AAPServerSocket server) {
 		if(command == COMMAND.TERMINATE)
 		    running = false;

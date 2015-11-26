@@ -1,9 +1,9 @@
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+//import java.io.InputStream;
+//import java.io.OutputStream;
+//import java.net.InetSocketAddress;
+//import java.net.ServerSocket;
+//import java.net.Socket;
 import java.net.UnknownHostException;
 
 /*
@@ -32,9 +32,9 @@ import java.net.UnknownHostException;
  * */
 public class FAA_client extends FAA_UI{
 	
-    private static Socket client;
-    private static InputStream in;
-    private static OutputStream out;
+    private static AAPSocket client;
+    private static AAPInputStream in;
+    private static AAPOutputStream out;
     private static boolean connected = false;
     private final static String CLIENT_DOWNLOAD_PATH = "downloads/";
     private final static String FILE_PATH = "test_files/";
@@ -82,7 +82,11 @@ public class FAA_client extends FAA_UI{
 		} else if (command == COMMAND.UNKNOWN  && connected){
 		    System.out.println("Invalid command input, please retry");
 		} else if(command == COMMAND.DISCONNECT  && connected){
-		    disconnect();
+			try {
+				disconnect();
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
 		}
     }
 	
@@ -113,7 +117,7 @@ public class FAA_client extends FAA_UI{
         	if(response.equalsIgnoreCase("#ready to receive#")) {
         		sendFile(FILE_PATH + cmd_extra, out);
         	}
-        	} catch (IOException e) {
+        	} catch (Exception e) {
         		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
         		return false;
         	}
@@ -123,7 +127,7 @@ public class FAA_client extends FAA_UI{
     private static void connect() throws UnknownHostException, IOException {
 	try {
 		
-	    client = new Socket(emu_addr, emu_port);
+	    client = new AAPSocket(emu_addr, emu_port,port);
 		in = client.getInputStream();
 		out = client.getOutputStream();
 		
@@ -144,7 +148,7 @@ public class FAA_client extends FAA_UI{
 	//	return true;
     }
 	
-    private static void disconnect() throws IOException {
+    private static void disconnect() throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
  		out.write(new String("disconnect").getBytes());
  		client.close();
  		connected = false;

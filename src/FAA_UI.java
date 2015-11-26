@@ -1,20 +1,11 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+//import java.io.InputStream;
+//import java.io.OutputStream;
 import java.util.Scanner;
 import java.util.Arrays;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 
 public class FAA_UI {
@@ -74,7 +65,7 @@ public class FAA_UI {
     	return command;
     }
     
-    protected static COMMAND processCommand(String input, boolean req) throws IOException {
+    protected static COMMAND processCommand(String input, boolean req) throws InvalidCommandException {
     	String cmd = formatInput(input, req);
     	COMMAND retcmd;
     	switch(cmd) {
@@ -82,7 +73,7 @@ public class FAA_UI {
 		    try {
 			windowSize = Integer.parseInt(cmd_extra);
 		    } catch (Exception e) {
-			throw new InvalidCommandException();
+		    	throw new InvalidCommandException();
 		    }
 		    	break;
 	    	case "terminate":	retcmd = COMMAND.TERMINATE;
@@ -124,7 +115,7 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static void sendFile(String filePath, OutputStream out) throws IOException {
+    protected static void sendFile(String filePath, AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
     	
     	//read the file from path	
     		File toSend = new File(filePath);
@@ -140,7 +131,7 @@ public class FAA_UI {
 	    		while((byteBuffSize = fis.read(sendByteBuff)) != -1) {
 	    			//out.write(sendByteBuff, 0, byteBuffSize);
 	    			out.write(sendByteBuff);
-	    			out.flush();
+	    			//out.flush();
     		}
 
     		/*
@@ -150,10 +141,9 @@ public class FAA_UI {
     		}
     	*/
     	//ack reciever the end of file transmission
-    		out.flush();
-    		//Thread.sleep(500);
+    		//out.flush();
         	out.write(new String("#end of transmission#").getBytes());
-        	out.flush();
+        //	out.flush();
     	} catch (IOException e) {
     		fis.close();
     		throw e;
@@ -161,7 +151,7 @@ public class FAA_UI {
     		fis.close();
     }
   
-    protected static void recvFile(String filePath, InputStream in) throws IOException, FileTransferException {
+    protected static void recvFile(String filePath, AAPInputStream in) throws IOException, FileTransferException, ServerNotRespondingException, ConnectionAbortEarlyException {
 
     	System.out.println("start receiving file from " + filePath);
     		File toRecv = new File(filePath);

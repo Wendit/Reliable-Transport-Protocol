@@ -99,5 +99,9 @@ public class AAPServerSocket {
     	socket.close();
     	return false;
 	}
+	
+	public String getRemoteSocketAddress() {
+		return remoteSocketAddress;
+	}
 
 }
