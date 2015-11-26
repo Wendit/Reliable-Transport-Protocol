@@ -127,6 +127,7 @@ public class AAPInputStream {
 			 //ackPacket
 			 if(ackAAPPacket != null){
 				 lastAckNum = AAPUtils.incrementSeqNum(lastAckNum);
+				 //*************return
 			 }
 			 try {
 				ackAAPPacket = new AAPPacket(
@@ -164,7 +165,7 @@ public class AAPInputStream {
 			 errorOccurs = true;
 		 }
 		 else{
-			 if(recvAAPPacket.getFlags() == AAPPacket.NULL_FLAG){
+			 if(recvAAPPacket.getFlags() == AAPPacket.NULL_FLAG || recvAAPPacket.getFlags() == AAPPacket.END_OF_PACKET_FLAG){
 				 endOfPacket = recvAAPPacket.getFlags();
 				 streamBuffer.put(recvAAPPacket.getPayload());
 				 remainWindowSize = (short) (MAX_WINDOW_SIZE - (short)streamBuffer.getLength());

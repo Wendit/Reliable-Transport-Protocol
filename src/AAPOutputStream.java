@@ -97,10 +97,18 @@ public class AAPOutputStream {
 	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{	
 		AAPPacket recvAAPPacket;
 		while(true){		
+			/*
+			 * check both list and break the loop if all data sent
+			 * 
+			 * */
+			
+			
 			try {
+				//waiting for ack
 				sendSocket.receive(recvPacket);
 			} catch (InterruptedIOException e) {
 				throw new ServerNotRespondingException("Remote is not responding");
+				//*****************return
 			}
 			
 			try{
