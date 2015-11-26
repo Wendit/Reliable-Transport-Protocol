@@ -104,7 +104,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		} else if(recvcmd == COMMAND.GET) {
 			System.out.println("receive get request from " + new String(clientSocket.getInetAddress().getAddress()));
 			try {
-				if(handleGet(out, in)) {
+				if(handleGet(out)) {
 					System.out.println("Sending file successfully.");
 				} else {
 					System.out.println("Sending file failed.");
@@ -114,17 +114,25 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 			}
 		} else if (recvcmd == COMMAND.POST) {
 			System.out.println("receive post request from " + new String(clientSocket.getInetAddress().getAddress()));
-		    //recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
+			try {
+				if(handlePost(in, out)) {
+					System.out.println("Receiving file successfully.");
+				} else {
+					System.out.println("Receiving file failed.");
+				}
+			} catch(Exception e) {
+				System.out.println("Connection issue: " + e.getMessage());
+			}
 		}
 		System.out.println("processRequest");
 
     }
     
-    private static boolean handleGet(OutputStream out, InputStream in) throws IOException {
+    private static boolean handleGet(OutputStream out) throws IOException {
     	try {
 	    	out.write(new String("#ready to transfer#").getBytes());
 	    	System.out.println("recieve get" + cmd_extra + "request");
-	    	sendFile(FILE_PATH + cmd_extra, out, in);
+	    	sendFile(FILE_PATH + cmd_extra, out);
     	} catch (IOException e) {
 	    	out.write(new String("#discard#").getBytes());
 	    	return false;
@@ -132,9 +140,15 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     	return true;
     }
 
-    private static boolean handlePost(InputStream in) throws IOException {
-    	//recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
-    	
+    private static boolean handlePost(InputStream in, OutputStream out) throws IOException, FileTransferException {
+    	try {
+    		out.write(new String("#ready to receive#").getBytes());
+	    	System.out.println("recieve post" + cmd_extra + "request");
+	    	recvFile(SERVER_DOWNLOAD_PATH + cmd_extra, in);
+    	} catch (IOException e) {
+    		
+    		return false;
+    	}
     	return true;
     }
     private static COMMAND getRequest(InputStream in) throws IOException {

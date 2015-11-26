@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Scanner;
+import java.util.Arrays;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -22,7 +23,6 @@ public class FAA_UI {
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};
     protected static boolean running = true;
-    //protected enum 
     private MODE mode;
     protected static int port;
     protected static String emu_addr;
@@ -37,6 +37,7 @@ public class FAA_UI {
 
     public FAA_UI(MODE mode) {
     	this.mode = mode;
+    	Arrays.fill(recvBuff, (byte)0xFF);
     }
 
     /*
@@ -123,7 +124,7 @@ public class FAA_UI {
      * Here are methods for file sending and receiving
      * */
 	
-    protected static void sendFile(String filePath, OutputStream out, InputStream in) throws IOException {
+    protected static void sendFile(String filePath, OutputStream out) throws IOException {
     	
     	//read the file from path	
     		File toSend = new File(filePath);
@@ -136,14 +137,10 @@ public class FAA_UI {
     	//file transfer
     		byte[] sendByteBuff = new byte[BUF_SIZE];
     		int byteBuffSize = 0;
-    		int size = in.read(recvBuff);
-    		String response = new String(recvBuff, 0, size);
-    		if(response.equalsIgnoreCase("#ready to receive#")) {
 	    		while((byteBuffSize = fis.read(sendByteBuff)) != -1) {
 	    			//out.write(sendByteBuff, 0, byteBuffSize);
 	    			out.write(sendByteBuff);
 	    			out.flush();
-	    		}
     		}
 
     		/*
@@ -164,14 +161,13 @@ public class FAA_UI {
     		fis.close();
     }
   
-    protected static void recvFile(String filePath, InputStream in, OutputStream out) throws IOException, FileTransferException {
+    protected static void recvFile(String filePath, InputStream in) throws IOException, FileTransferException {
 
     	System.out.println("start receiving file from " + filePath);
     		File toRecv = new File(filePath);
     		FileOutputStream fos = new FileOutputStream(toRecv);
 		
     		try {
-	    		out.write(new String("#ready to receive#").getBytes());
 		    	String response = "";
 		    	int size = 0;
 

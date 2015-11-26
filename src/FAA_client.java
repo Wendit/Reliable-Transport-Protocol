@@ -95,7 +95,7 @@ public class FAA_client extends FAA_UI{
 	    	int size = in.read(recvBuff);
 	    	response = new String(recvBuff, 0, size);
 	    	if(response.equalsIgnoreCase("#ready to transfer#")) {
-	    		recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in, out);
+	    		recvFile(CLIENT_DOWNLOAD_PATH + cmd_extra, in);
 	    	}
 	    } catch (Exception e) {
 	    		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
@@ -111,7 +111,7 @@ public class FAA_client extends FAA_UI{
         	int size = in.read(recvBuff);
         	response = new String(recvBuff, 0, size);
         	if(response.equalsIgnoreCase("#ready to receive#")) {
-        		sendFile(FILE_PATH + cmd_extra, out, in);
+        		sendFile(FILE_PATH + cmd_extra, out);
         	}
         	} catch (IOException e) {
         		System.out.println("Experiencing " + e.getMessage() + ". Please retry later.");
