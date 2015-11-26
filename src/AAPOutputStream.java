@@ -45,6 +45,7 @@ public class AAPOutputStream {
 		this.recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		this.lastAcked = -1;
 		this.currentConnectionTries = MAX_CONNECTION_TRY;
+		this.container = container;
 		
 	}
 	

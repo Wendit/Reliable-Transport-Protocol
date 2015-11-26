@@ -55,11 +55,12 @@ public class AAPPacket implements Serializable{
 				&& flags != ACK_FLAG 
 				&& flags != FIN_FLAG 
 				&& flags != NULL_FLAG
+				&& flags != END_OF_PACKET_FLAG
 			){
 			throw new FlagNotFoundException("Flag not found: "+flags);
 		}
-		if(payload.length >= MAX_PAYLOAD_SIZE){
-			throw new PayLoadSizeTooLargeException("The payload should be less than 32 bytes");
+		if(payload.length > MAX_PAYLOAD_SIZE){
+			throw new PayLoadSizeTooLargeException("The payload should be less than 256 bytes");
 		}
 		else{		
 			this.seqNum = seqNum;

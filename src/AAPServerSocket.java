@@ -66,13 +66,8 @@ public class AAPServerSocket {
     			sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_ACK_FLAG,
     					(short)0, "SYN_ACK".getBytes());
     			DatagramPacket temp = new DatagramPacket(sendAAPacket.getPacketData(),
-  					  AAPPacket.PACKET_SIZE,InetAddress.getByName("10.0.0.11"), 8080);
+  					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
     	    	socket.send(temp);
-    	    	
-    	    	DatagramPacket temp2 = new DatagramPacket(sendAAPacket.getPacketData(),
-    					  AAPPacket.PACKET_SIZE,InetAddress.getByName("10.0.0.11"), 8079);
-      	    	socket.send(temp2);
-      	    	
     		}
     		
     		while(tries != 0){
@@ -81,8 +76,9 @@ public class AAPServerSocket {
 	    			socket.receive(recvPacket);
 	    			//Extract ACK
 	        		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-	        		if(recvPacket.getAddress().equals(remoteSocketAddress)
+	        		if(recvPacket.getAddress().toString().split("/")[1].equals(remoteSocketAddress)
 	        				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
+	        			tries = MAX_TRY;
 	        			socket.close();
 	        			return true;
 	        		}else{
