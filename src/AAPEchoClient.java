@@ -15,9 +15,9 @@ public class AAPEchoClient {
     String server = args[0];       // Server name or IP address
     // Convert argument String to bytes using the default character encoding
 
-     //data = args[1].getBytes();
-    data = new byte[400];
-    Arrays.fill(data, (byte)200);
+    data = args[1].getBytes();
+    //data = new byte[400];
+    //Arrays.fill(data, (byte)200);
     int servPort = (args.length == 3) ? Integer.parseInt(args[2]) : 7;
 
     // Create socket that is connected to server on specified port
@@ -27,8 +27,8 @@ public class AAPEchoClient {
 		
 	    System.out.println("Connected to server...sending echo string");
 	
-	    AAPInputStream in = socket.getInputStream();
-	    AAPOutputStream out = socket.getOutputStream();
+	    SWInputStream in = socket.getSWInputStream();
+	    SWOutputStream out = socket.getSWOutputStream();
 	
 	    out.write(data);  // Send the encoded string to the server
 	
@@ -49,12 +49,10 @@ public class AAPEchoClient {
 		e.printStackTrace();
 	}catch(ConnectionAbortEarlyException e){
 		e.printStackTrace();
-	}catch(PayLoadSizeTooLargeException e){
-		e.printStackTrace();
 	}
   }
   
-  protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+  protected static int waitUntilRead(SWInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
   	int size = 0;
   	while((size = in.read(data)) <= 0) {
   		if(size == -1) {

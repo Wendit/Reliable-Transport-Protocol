@@ -16,6 +16,8 @@ public class AAPSocket {
 	private int localBindPort;
 	private AAPInputStream inputStream;
 	private AAPOutputStream outputStream;
+	private SWInputStream swInputStream;
+	private SWOutputStream swOutputStream;
 	
 	
 	/**
@@ -53,6 +55,8 @@ public class AAPSocket {
 		if(fromServerAccept){
 			this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
 			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+			this.swInputStream = new SWInputStream(socket,0, remoteSocketAddress, remoteSocketPort);
+			this.swOutputStream = new SWOutputStream(socket,0, remoteSocketAddress, remoteSocketPort);
 		}else{
 			threeWayHandShake(remoteSocketAddress,remoteSocketPort);
 		}
@@ -64,6 +68,14 @@ public class AAPSocket {
 	
 	public AAPOutputStream getOutputStream(){
 		return outputStream;
+	}
+	
+	public SWInputStream getSWInputStream(){
+		return swInputStream;
+	}
+	
+	public SWOutputStream getSWOutputStream(){
+		return swOutputStream;
 	}
 	
 	public void close() throws UnknownHostException, IOException{
@@ -107,8 +119,10 @@ public class AAPSocket {
 		    	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
 		    					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
 		    	    	
-		    	    	this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		    			this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
 		    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		    			this.swInputStream = new SWInputStream(socket,0, remoteSocketAddress, remoteSocketPort);
+		    			this.swOutputStream = new SWOutputStream(socket,0, remoteSocketAddress, remoteSocketPort);
 		    			DebugUtils.debugPrint("Send ACK back to server: "+remoteSocketAddress+" "+remoteSocketPort);
 		    			break;
 	

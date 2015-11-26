@@ -26,8 +26,8 @@ public class AAPEchoServer {
 					      String clientAddress = clntSock.getRemoteSocketAddress().toString();
 					      System.out.println("Handling client at " + clientAddress);
 					      
-					      AAPInputStream in = clntSock.getInputStream();
-					      AAPOutputStream out = clntSock.getOutputStream();
+					      SWInputStream in = clntSock.getSWInputStream();
+					      SWOutputStream out = clntSock.getSWOutputStream();
 					
 					      // Receive until client closes connection, indicated by -1 return
 					      
@@ -51,7 +51,7 @@ public class AAPEchoServer {
 
 	}
 	  
-	  protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+	  protected static int waitUntilRead(SWInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
 		  	int size = 0;
 		  	while((size = in.read(receiveBuf)) <= 0) {
 		  		if(size == -1) {

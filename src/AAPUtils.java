@@ -19,4 +19,8 @@ public class AAPUtils {
 	public static AAPPacket getRecvAAPPacket(byte[] packetData) throws FlagNotFoundException, IOException, PacketCorruptedException{
 		return new AAPPacket(packetData);
 	}
+	
+	public static int alterBit(int a){
+		return (a+1)%2;
+	}
 }
