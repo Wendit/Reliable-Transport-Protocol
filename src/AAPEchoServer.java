@@ -31,8 +31,8 @@ public class AAPEchoServer {
 		      while ((recvMsgSize = in.read(receiveBuf)) != -1) {
 		        out.write(receiveBuf, 0, recvMsgSize);
 		      }
-		
-		      clntSock.close();  // Close the socket.  We are done with this client!
+		      if(!clntSock.socket.isClosed())
+		    	  clntSock.close();  // Close the socket.  We are done with this client!
 		    }
 		    /* NOT REACHED */
 	  }catch(Exception e){

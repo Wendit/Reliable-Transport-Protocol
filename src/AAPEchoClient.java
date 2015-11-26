@@ -40,7 +40,9 @@ public class AAPEchoClient {
 	
 	    System.out.println("Received: " + new String(data));
 	
-	    socket.close();  // Close the socket and its streams
+	    if(!socket.socket.isClosed())
+	    	socket.close(); 
+	    // Close the socket and its streams
 	} catch (ServerNotRespondingException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();

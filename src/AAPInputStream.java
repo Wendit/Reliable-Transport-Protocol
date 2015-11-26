@@ -52,48 +52,51 @@ public class AAPInputStream {
 	public Byte read() throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
 		try{
 			receive();
-		}catch(SocketException e){
+			return streamBuffer.getByte();
+		}catch(SocketException e ){
 			e.printStackTrace();
 			return -1;
-		}
+		}catch(ServerNotRespondingException e){
+			e.printStackTrace();
+			return -1;
+		}	
 		
-		return streamBuffer.getByte();
 	}
-	
-	public int read(byte[] recvBuffer) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
+		public int read(byte[] recvBuffer) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
 		try{
-			receive();
-		}catch(SocketException e){
-			e.printStackTrace();
-			return -1;
-		}
-		
-		Byte temp;
-		int i;
-		for( i = 0; i < recvBuffer.length && streamBuffer.getLength() !=0 ; i++){
-			if((temp =  streamBuffer.getByte()) != null){
-				recvBuffer[i] = temp;
+				receive();
+				Byte temp;
+				int i;
+				for( i = 0; i < recvBuffer.length && streamBuffer.getLength() !=0 ; i++){
+					if((temp =  streamBuffer.getByte()) != null){
+						recvBuffer[i] = temp;
+					}
+				}
+					return i;
+			}catch(SocketException e ){
+				e.printStackTrace();
+				return -1;
+			}catch(ServerNotRespondingException e){
+				e.printStackTrace();
+				return -1;
 			}
-		}
-		return i;
 	}
 	
 	public int read(byte[] recvBuffer, int off, int len) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException{
 		try{
 			receive();
+			Byte temp;
+			int i;
+			for( i = 0; i < len && streamBuffer.getLength() !=0; i++){
+				if((temp =  streamBuffer.getByte()) != null){
+					recvBuffer[off+i] = temp;
+				}
+			}
+			return i;
 		}catch(SocketException e){
 			e.printStackTrace();
 			return -1;
 		}
-		
-		Byte temp;
-		int i;
-		for( i = 0; i < len && streamBuffer.getLength() !=0; i++){
-			if((temp =  streamBuffer.getByte()) != null){
-				recvBuffer[off+i] = temp;
-			}
-		}
-		return i;
 	}
 	
 	public void close(){
@@ -103,19 +106,18 @@ public class AAPInputStream {
 	private void receive() throws ServerNotRespondingException, ConnectionAbortEarlyException, SocketException,IOException{
 		recvPacket = new DatagramPacket(packetBuffer, AAPPacket.PACKET_SIZE);
 		endOfPacket = 0;
+		currentTries = MAX_TRY;
 		while(endOfPacket != AAPPacket.END_OF_PACKET_FLAG){
 			 try {
-				 recvSocket.receive(recvPacket);
+				 recvSocket.receive(recvPacket);			 
+				 sendAckBack();
 				 }catch(InterruptedIOException e){
 					 currentTries --;
 					 if(currentTries == 0){
 						 container.close();
 						 throw new ServerNotRespondingException("Remote not responding. Connection abort. Please reset connection.");
 					 }
-					 break;
 				 }	
-			 currentTries = MAX_TRY;
-			 sendAckBack();
 		}
 	}
 	
