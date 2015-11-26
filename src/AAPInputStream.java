@@ -127,7 +127,6 @@ public class AAPInputStream {
 			 //ackPacket
 			 if(ackAAPPacket != null){
 				 lastAckNum = AAPUtils.incrementSeqNum(lastAckNum);
-				 //*************return
 			 }
 			 try {
 				ackAAPPacket = new AAPPacket(
