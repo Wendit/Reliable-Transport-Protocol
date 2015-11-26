@@ -123,49 +123,43 @@ public class AAPSocket {
 	    
 	    int tries = MAX_TRY;
 
-	    while(true){	    	
-	    	try {
-	    		//Send SYN
-				sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
-						(short)0, "SYN".getBytes());
-		    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-						  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-			} catch (PayLoadSizeTooLargeException e) {
-				e.printStackTrace();
-			}catch (FlagNotFoundException e){
-				e.printStackTrace();
-			}
-	    	try{
-	    		//Receive ACK
-	    		socket.receive(recvPacket);
-	    	}catch(InterruptedIOException e){
-	    		tries--;
-	    		if(tries == 0){
-	    			throw new ServerNotRespondingException("Remote not responding. Three way handshake  failed.");
-	    		}
+	    while(true){
+		    	try{
+		    		//Send SYN
+					sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
+							(short)0, "SYN".getBytes());
+					DatagramPacket temp = new DatagramPacket(sendAAPacket.getPacketData(),
+							  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort);
+			    	socket.send(temp);
+		    	
+					//Receive ACK
+					sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_FLAG,
+							(short)0, "SYN".getBytes());
+					socket.receive(recvPacket);
+									    	
+		    		//Extract ACK
+		    		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
+		    		if(recvAAPPacket.getFlags() == AAPPacket.SYN_ACK_FLAG){
+		    			sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
+		    					(short)0, "ACK".getBytes());
+		    	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
+		    					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
+		    	    	
+		    	    	this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
+		    			break;
+	
+		    		}
+		    		
+		    	}catch(InterruptedIOException e){
+		    		tries--;
+		    		if(tries == 0){
+		    			throw new ServerNotRespondingException("Server is not responding. Please reset sockt.");
+		    		}
+		    	}
+		    	catch(FlagNotFoundException | PayLoadSizeTooLargeException | PacketCorruptedException e){
+		    			e.printStackTrace();
+		    	}
 	    	}
-	    	
-	    	try{
-	    		//Extract ACK
-	    		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-	    		if(recvAAPPacket.getFlags() == AAPPacket.SYN_ACK_FLAG){
-	    			sendAAPacket = new AAPPacket(0, 0, AAPPacket.ACK_FLAG,
-	    					(short)0, "ACK".getBytes());
-	    	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-	    					  AAPPacket.PACKET_SIZE,InetAddress.getByName(remoteSocketAddress), remoteSocketPort));
-	    	    	
-	    	    	this.inputStream = new AAPInputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
-	    			this.outputStream = new AAPOutputStream(socket,0, remoteSocketAddress, remoteSocketPort, this);
-	    			break;
-	    		}
-	    		
-	    	}catch(FlagNotFoundException e){
-				 DebugUtils.debugPrint(e.getMessage());
-			 }catch(PacketCorruptedException e){
-				 DebugUtils.debugPrint(e.getMessage());
-			 }catch(PayLoadSizeTooLargeException e){
-				 DebugUtils.debugPrint(e.getMessage());
-			 }
-	    }
-	}
+	   }
 }

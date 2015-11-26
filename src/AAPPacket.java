@@ -8,7 +8,7 @@ public class AAPPacket implements Serializable{
 
 	private static Random rand = new Random(); 
 	private byte[] payload; 
-	private char payloadSize;
+	private byte payloadSize;
 	private int seqNum;
 	private int ackNum;
 	private short flags;
@@ -66,7 +66,7 @@ public class AAPPacket implements Serializable{
 			this.ackNum = ackNum;
 			this.flags = flags;
 			this.windowSize = windowSize;
-			this.payloadSize = (char)payload.length;
+			this.payloadSize = (byte) payload.length;
 			this.payload = payload; 
 			this.checksum = getChecksum();
 		}
@@ -81,13 +81,14 @@ public class AAPPacket implements Serializable{
 	public AAPPacket(byte[] bArray) throws FlagNotFoundException, IOException, PacketCorruptedException {
 		ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
 		buffer.put(bArray);
+		buffer.position(0);
 		
 		this.seqNum = buffer.getInt();
 		this.ackNum = buffer.getInt();
 		this.flags = buffer.getShort();
 		this.windowSize = buffer.getShort();
 		this.checksum = buffer.getLong();
-		this.payloadSize = buffer.getChar();
+		this.payloadSize = buffer.get();
 		this.payload = new byte[payloadSize];
 		buffer.get(this.payload, 0, payloadSize); 
 		
@@ -136,7 +137,7 @@ public class AAPPacket implements Serializable{
 		buffer.putInt(ackNum);	
 		buffer.putShort(flags);
 		buffer.putShort(windowSize);
-		buffer.putChar(payloadSize);
+		buffer.put(payloadSize);
 		buffer.put(payload);
 
 		CRC32 checksum = new CRC32();
@@ -153,7 +154,7 @@ public class AAPPacket implements Serializable{
 		buffer.putShort(flags);
 		buffer.putShort(windowSize);
 		buffer.putLong(checksum);
-		buffer.putChar(payloadSize);
+		buffer.put(payloadSize);
 		buffer.put(payload);
 		
 		return buffer.array();

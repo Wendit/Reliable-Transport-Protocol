@@ -10,7 +10,7 @@ public class AAPServerSocket {
 	private int port;
 	private static final int TIMEOUT = 3000;
 	private static final int MAX_TRY = 10;
-    private InetAddress remoteSocketAddress;
+    private String remoteSocketAddress;
     private int remoteSocketPort;
 	
 	/**
@@ -25,7 +25,7 @@ public class AAPServerSocket {
 	public AAPSocket accept() throws IOException, ServerNotRespondingException{
 		//three way handshake here
 		while(!threeWayHandShake());
-		return new AAPSocket(remoteSocketAddress.getHostAddress(),remoteSocketPort, port, true); 
+		return new AAPSocket(remoteSocketAddress,remoteSocketPort, port, true); 
 	}
 	
 	public void bind(){
@@ -45,8 +45,17 @@ public class AAPServerSocket {
 	    int tries = MAX_TRY;
 	    
     	//Receive SYN
-    	socket.receive(recvPacket);
-    	remoteSocketAddress = recvPacket.getAddress();
+	    while(true){
+	    	try{
+	    		socket.receive(recvPacket);
+	    		//block until receive
+	    		break;
+	    	}catch(InterruptedIOException e){
+	    		
+	    	}
+	    }
+	    
+    	remoteSocketAddress = recvPacket.getAddress().toString().split("/")[1];
     	remoteSocketPort = recvPacket.getPort();
     	
     	try{		
@@ -56,8 +65,14 @@ public class AAPServerSocket {
     		if(recvAAPPacket.getFlags() == AAPPacket.SYN_FLAG){
     			sendAAPacket = new AAPPacket(0, 0, AAPPacket.SYN_ACK_FLAG,
     					(short)0, "SYN_ACK".getBytes());
-    	    	socket.send(new DatagramPacket(sendAAPacket.getPacketData(),
-    					  AAPPacket.PACKET_SIZE,remoteSocketAddress, remoteSocketPort));
+    			DatagramPacket temp = new DatagramPacket(sendAAPacket.getPacketData(),
+  					  AAPPacket.PACKET_SIZE,InetAddress.getByName("10.0.0.11"), 8080);
+    	    	socket.send(temp);
+    	    	
+    	    	DatagramPacket temp2 = new DatagramPacket(sendAAPacket.getPacketData(),
+    					  AAPPacket.PACKET_SIZE,InetAddress.getByName("10.0.0.11"), 8079);
+      	    	socket.send(temp2);
+      	    	
     		}
     		
     		while(tries != 0){
