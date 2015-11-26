@@ -17,28 +17,33 @@ public class AAPEchoServer {
 	
 	    int recvMsgSize;   // Size of received message
 	    receiveBuf = new byte[BUFSIZE];  // Receive buffer
-	    try{
+	
 		    while (true) { // Run forever, accepting and servicing connections
-		      AAPSocket clntSock = servSock.accept();     // Get client connection
-		
-		      String clientAddress = clntSock.getRemoteSocketAddress().toString();
-		      System.out.println("Handling client at " + clientAddress);
-		      
-		      AAPInputStream in = clntSock.getInputStream();
-		      AAPOutputStream out = clntSock.getOutputStream();
-		
-		      // Receive until client closes connection, indicated by -1 return
-		      
-		      recvMsgSize = waitUntilRead(in);
-		      out.write(receiveBuf, 0, recvMsgSize);
-		      
-		      if(!clntSock.socket.isClosed())
-		    	  clntSock.close();  // Close the socket.  We are done with this client!
+		        try{
+				      AAPSocket clntSock = servSock.accept();     // Get client connection
+				      receiveBuf = new byte[BUFSIZE];  // Receive buffer
+				
+				      String clientAddress = clntSock.getRemoteSocketAddress().toString();
+				      System.out.println("Handling client at " + clientAddress);
+				      
+				      AAPInputStream in = clntSock.getInputStream();
+				      AAPOutputStream out = clntSock.getOutputStream();
+				
+				      // Receive until client closes connection, indicated by -1 return
+				      
+				      recvMsgSize = waitUntilRead(in);
+				      out.write(receiveBuf, 0, recvMsgSize);
+				      
+				      if(!clntSock.socket.isClosed()){
+				    	  DebugUtils.debugPrint("Close the socket for current user ");
+				    	  clntSock.close();  // Close the socket.  We are done with this client!
+				      }
+		  	  }catch(Exception e){
+				  e.printStackTrace();
+			  }
 		    }
 		    /* NOT REACHED */
-	  }catch(Exception e){
-		  e.printStackTrace();
-	  }
+
 	}
 	  
 	  protected static int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {

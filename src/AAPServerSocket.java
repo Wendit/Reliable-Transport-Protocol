@@ -80,7 +80,8 @@ public class AAPServerSocket {
     			socket.receive(recvPacket);
     			//Extract ACK
         		recvAAPPacket = AAPUtils.getRecvAAPPacket(AAPUtils.getAAPPacketData(recvPacket));
-        		if(recvPacket.getAddress().toString().split("/")[1].equals(remoteSocketAddress)
+        		String newSender = recvPacket.getAddress().toString().split("/")[1];
+        		if(newSender.equals(remoteSocketAddress)
         				&& recvAAPPacket.getFlags() == AAPPacket.ACK_FLAG){
         			DebugUtils.debugPrint("Recieved ACK from client: "+remoteSocketAddress+" "+remoteSocketPort);
         			socket.close();
