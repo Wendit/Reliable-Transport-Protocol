@@ -36,8 +36,6 @@ public class FAA_client extends FAA_UI{
     private static AAPInputStream in;
     private static AAPOutputStream out;
     private static boolean connected = false;
-    private final static String CLIENT_DOWNLOAD_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/downloads/";
-    private final static String FILE_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/test_files/";
 
     public FAA_client() {
 	super(MODE.CLIENT);
@@ -138,36 +136,30 @@ public class FAA_client extends FAA_UI{
     	return true;
     }
 
-    private static void connect() throws UnknownHostException, IOException {
+    private static void connect() {
 	try {
 		
 	    client = new AAPSocket(emu_addr, emu_port,port);
 		in = client.getInputStream();
 		out = client.getOutputStream();
-		
-			/*
-			//client = new Socket();
-			//client.bind(new InetSocketAddress(emu_addr, port));
-			
-			System.out.println("bind to local host: "  + " port: " + client.getLocalPort());
-			client.connect(new InetSocketAddress(emu_addr, emu_port));
-			in = client.getInputStream();
-			out = client.getOutputStream();
-			*/
+
 		Thread.sleep(1000);
 		out.write(new String("connect").getBytes());
 		connected = true;
 	} catch(Exception e) {
 		System.out.println("Error happens " + e.getMessage() + ". please re-run.");
+		connected = false;
 	}
-	//	return true;
     }
 	
     private static void disconnect() throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException {
- 		out.write(new String("disconnect").getBytes());
- 		client.close();
- 		connected = false;
-	//return false;
+    	try {
+    	out.write(new String("disconnect").getBytes());
+    	} catch(Exception e) {
+    		System.out.println(e.getMessage());
+    	}
+    	connected = false;
+    	client.close();
     }
 
 }

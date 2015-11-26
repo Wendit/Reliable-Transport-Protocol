@@ -9,7 +9,11 @@ import java.util.Arrays;
 
 
 public class FAA_UI {
-
+	
+	protected final static String CLIENT_DOWNLOAD_PATH = "downloads/";
+	protected final static String FILE_PATH = "test_files/";
+	protected final static String SERVER_DOWNLOAD_PATH = "uploads/";
+	
 	protected final static int BUF_SIZE = 256;
     protected enum MODE {CLIENT,SERVER};
     protected enum COMMAND {WINDOW, TERMINATE, CONNECT, GET, POST, DISCONNECT, UNKNOWN};

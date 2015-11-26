@@ -29,9 +29,6 @@ import java.net.UnknownHostException;
  * 
  */
 public class FAA_server extends FAA_UI/* implements Runnable*/{
-	
-	private final static String SERVER_DOWNLOAD_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/uploads/";
-    private final static String FILE_PATH = "/home/lu/Desktop/GIT/Reliable-Transport-Protocol/src/test_files/";
 
     //private static boolean running = true;
     public FAA_server() {
