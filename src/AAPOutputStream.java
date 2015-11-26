@@ -99,7 +99,10 @@ public class AAPOutputStream {
 	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{	
 		AAPPacket recvAAPPacket;
 		while(true){			
-			try {
+			try {				
+				if(packetsList.size() == 0 && packetWindow.size() == 0){
+					return;
+				}	
 				//waiting for ack
 				sendSocket.receive(recvPacket);
 				DebugUtils.debugPrint("Recieved ack from: "+recverAddress+" "+recverPort);
