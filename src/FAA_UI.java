@@ -183,5 +183,15 @@ public class FAA_UI {
     		System.out.println("end of receive.");
 	    fos.close();
     }
+    
+    protected int waitUntilRead(AAPInputStream in) throws ServerNotRespondingException, ConnectionAbortEarlyException, IOException {
+    	int size = 0;
+    	while((size = in.read(recvBuff)) <= 0) {
+    		if(size == -1) {
+    			//throw
+    		}
+    	}
+    	return size;
+    }
 	
 }
