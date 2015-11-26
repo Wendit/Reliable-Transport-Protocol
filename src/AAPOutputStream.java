@@ -49,18 +49,19 @@ public class AAPOutputStream {
 		
 	}
 	
-	public void write(byte b) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException{
+	public void write(byte b) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException{
 		byte[] temp = {b};
 		send(temp);
 	}
 	
-	public void write(byte[] bArray) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException{
+	public void write(byte[] bArray) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException{
 		DebugUtils.debugPrint("Write string to: "+recverAddress+" "+recverPort);
 		send(bArray);
 	}
 	
-	public void write(byte[] b, int off, int len) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException{
+	public void write(byte[] b, int off, int len) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException{
 		byte[] temp = Arrays.copyOfRange(b, off, off+len);
+		//Thread.sleep(500);
 		send(temp);
 	}
 	
@@ -68,12 +69,12 @@ public class AAPOutputStream {
 		sendSocket.close();
 	}
 	
-	private void send(byte[] b) throws IOException, PayLoadSizeTooLargeException, ConnectionAbortEarlyException{
+	private void send(byte[] b) throws IOException, PayLoadSizeTooLargeException, ConnectionAbortEarlyException, InterruptedException{
 		putPacketInQueue(b);
 		sendPackets();	
 	}
 	
-	private void sendPackets() throws IOException, ConnectionAbortEarlyException{	  
+	private void sendPackets() throws IOException, ConnectionAbortEarlyException, InterruptedException{	  
 	  fillWindow();//Automatically sends the packets added
 	  lastAcked = packetWindow.getFirst().getSeqNum();
 	  currentConnectionTries = MAX_CONNECTION_TRY;
@@ -96,7 +97,7 @@ public class AAPOutputStream {
 	}
 	
 	
-	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException{	
+	private void recvAckAndFillWindow() throws IOException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException{	
 		AAPPacket recvAAPPacket;
 		while(true){			
 			try {				
@@ -165,10 +166,11 @@ public class AAPOutputStream {
 		}
 	}
 	
-	private void fillWindow() throws UnknownHostException, IOException{
+	private void fillWindow() throws UnknownHostException, IOException, InterruptedException{
 		while(packetWindow.size() < currentWindowSize && packetsList.size() != 0){
 			AAPPacket temp = moveListHeadToWindow();
 			DebugUtils.debugPrint("Fill window with packet "+ temp.getPayloadToString());
+			//Thread.sleep(50);
 			sendSocket.send(new DatagramPacket(temp.getPacketData(),
 					  AAPPacket.PACKET_SIZE,InetAddress.getByName(recverAddress), recverPort));
 		}

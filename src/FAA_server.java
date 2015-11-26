@@ -110,7 +110,8 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 
 
     private static void processRequest(AAPInputStream in, AAPOutputStream out, COMMAND recvcmd, AAPSocket clientSocket) {
-		if(recvcmd == COMMAND.CONNECT) {
+    	System.out.println("processRequest");
+    	if(recvcmd == COMMAND.CONNECT) {
 		    System.out.println("receive connect request********************************");
 		} else if(recvcmd == COMMAND.GET) {
 			//System.out.println("receive get request from " + new String(clientSocket.getRemoteSocketAddress().getAddress()));
@@ -135,11 +136,11 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 				System.out.println("Connection issue: " + e.getMessage());
 			}
 		}
-		System.out.println("processRequest");
+		//System.out.println("processRequest");
 
     }
     
-    private static boolean handleGet(AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
+    private static boolean handleGet(AAPOutputStream out) throws IOException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException {
     	try {
 	    	out.write(new String("#ready to transfer#").getBytes());
 	    	System.out.println("recieve get" + cmd_extra + "request");
@@ -151,7 +152,7 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
     	return true;
     }
 
-    private static boolean handlePost(AAPInputStream in, AAPOutputStream out) throws IOException, FileTransferException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException {
+    private static boolean handlePost(AAPInputStream in, AAPOutputStream out) throws IOException, FileTransferException, PayLoadSizeTooLargeException, ServerNotRespondingException, ConnectionAbortEarlyException, InterruptedException {
     	try {
     		out.write(new String("#ready to receive#").getBytes());
 	    	System.out.println("recieve post" + cmd_extra + "request");
@@ -167,9 +168,10 @@ public class FAA_server extends FAA_UI/* implements Runnable*/{
 		System.out.println("waiting for request.");
 		//****************************************************
 		//if((recvSize = in.read(recvBuff)) > -1) {
-		while((recvSize = in.read(recvBuff)) <= 0) {
-			
-		}
+	//	while((recvSize = in.read(recvBuff)) <= 0) {}
+		if ((recvSize = waitUntilRead(in)) == -1) {
+    		return COMMAND.DISCONNECT;
+    	}
 	    request = new String(recvBuff, 0, recvSize);
 
 		System.out.println("get request " + request);
