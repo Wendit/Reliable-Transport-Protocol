@@ -1,6 +1,7 @@
 ﻿README
-Team Members:        Fu Shen         fushen@gatech.edu
-                       Wendi Tang          wtang45@gatech.edu
+Team Members:
+Fu Shen         fushen@gatech.edu
+Wendi Tang      wtang45@gatech.edu
 
 
 Class: CS3251 B
@@ -133,4 +134,4 @@ API description:
 
 
 Known bugs and limitations:
-        It takes a while to transfer large size file. Error handling is not completely work.
+        It takes a while to transfer large size file. Error handling is not completed yet. (retransmitting need to be debugged)
